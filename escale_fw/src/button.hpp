@@ -10,7 +10,7 @@ enum ButtonState
 class Button final
 {
 public:
-  Button(unsigned long toggleHoldOffDuration);
+  explicit Button(unsigned long toggleHoldOffDuration);
 
   /// Call this method to update the state of a button whenever a change is
   /// detected or more often.

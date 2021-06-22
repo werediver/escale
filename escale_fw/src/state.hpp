@@ -12,10 +12,9 @@ enum Mode
 
 struct State
 {
-  State() : mode(ModeNormal), n(0) {}
-
   Mode mode;
   std::int32_t n;
+  float w;
 };
 
 #endif

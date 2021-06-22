@@ -1,11 +1,11 @@
 #include "button.hpp"
 
 Button::Button(unsigned long toggleHoldOffDuration)
-    : state(ButtonUp),
-      timestamp(0),
-      isDownPending(false),
-      isUpPending(false),
-      toggleHoldOffDuration(toggleHoldOffDuration) {}
+    : state{ButtonUp},
+      timestamp{0},
+      isDownPending{false},
+      isUpPending{false},
+      toggleHoldOffDuration{toggleHoldOffDuration} {}
 
 void Button::update(const ButtonState newState, const unsigned long now)
 {
