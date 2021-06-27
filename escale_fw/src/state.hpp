@@ -1,20 +1,17 @@
 #ifndef __STATE_HPP__
 #define __STATE_HPP__
 
-#include <cstdint>
-
-enum Mode
-{
-  ModeNormal,
-  ModeNau7802NotFound,
-  ModeHalt
-};
-
+template <typename Tag>
 struct State
 {
-  Mode mode;
-  std::int32_t n;
-  float w;
+  State(Tag tag) : tag{tag} {}
+
+  virtual ~State() {}
+
+  virtual void onEnter() = 0;
+  virtual void onExit() = 0;
+
+  Tag tag;
 };
 
 #endif

@@ -3,35 +3,41 @@
 #include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
 #include <vector>
 
-#include "overloaded.hpp"
-#include "button.hpp"
-#include "u8g2display.hpp"
-#include "views.hpp"
-#include "state.hpp"
+#include "app_hal/button.hpp"
+#include "app_hal/display/u8g2display.hpp"
+#include "app_input.hpp"
+#include "app_state.hpp"
+#include "ui/dashboard/dashboard_input_handler.hpp"
+#include "ui/dashboard/dashboard_view.hpp"
+#include "ui/message/message_view.hpp"
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2{U8G2_R0, U8X8_PIN_NONE, SCL, SDA};
-U8G2Display display{u8g2};
+AppHAL::U8G2Display display{u8g2};
 NAU7802 nau7802;
 
 const uint32_t buttonAPin = 7;
 const uint32_t buttonBPin = 8;
 const unsigned long buttonToggleHoldOffDuration = 20; // ms
-Button buttonA{buttonToggleHoldOffDuration};
-Button buttonB{buttonToggleHoldOffDuration};
+AppHAL::Button buttonA{buttonToggleHoldOffDuration};
+AppHAL::Button buttonB{buttonToggleHoldOffDuration};
 
-State state;
+AppState state;
 
 template <typename Context>
 using Task = void (*)(Context &);
 
-std::vector<Task<State>> tasks;
+std::vector<Task<AppState>> tasks;
 
-void handleButtons(int32_t &n)
+DashboardInputHandler dashboardInputHandler{state.n};
+
+std::vector<AppInput::InputHandler *> inputHandlers;
+
+void readButtons(int32_t &n)
 {
-  if (buttonA.clearIsDownPending())
-    n += 1;
-  if (buttonB.clearIsDownPending())
-    n -= 1;
+  if (buttonA.clearIsDownPending() && !inputHandlers.empty())
+    inputHandlers.back()->onButtonDown(AppInput::ButtonA);
+  if (buttonB.clearIsDownPending() && !inputHandlers.empty())
+    inputHandlers.back()->onButtonDown(AppInput::ButtonB);
 }
 
 void readWeight(float &w)
@@ -39,19 +45,19 @@ void readWeight(float &w)
   w = nau7802.getWeight(true, 1);
 }
 
-void updateDisplay(const State &state)
+void updateDisplay(const AppState &state)
 {
   switch (state.mode)
   {
-  case ModeNormal:
+  case AppModeTagNormal:
   {
     displayDashboardView(DashboardViewModel{state.n, state.w}, display);
     break;
   }
-  case ModeNau7802NotFound:
-    displayErrorView(ErrorViewModel{ErrorViewModel::ErrorNAU7802NotFound}, display);
+  case AppModeTagNau7802NotFound:
+    displayMessageView(MessageViewModel{MessageViewModel::MessageNAU7802NotFound}, display);
     break;
-  case ModeHalt:
+  case AppModeTagHalt:
     break;
   }
 }
@@ -59,8 +65,8 @@ void updateDisplay(const State &state)
 void updateButtons()
 {
   const unsigned long now = millis();
-  buttonA.update(digitalRead(buttonAPin) == 0 ? ButtonDown : ButtonUp, now);
-  buttonB.update(digitalRead(buttonBPin) == 0 ? ButtonDown : ButtonUp, now);
+  buttonA.update(digitalRead(buttonAPin) == 0 ? AppHAL::Button::StateDown : AppHAL::Button::StateUp, now);
+  buttonB.update(digitalRead(buttonBPin) == 0 ? AppHAL::Button::StateDown : AppHAL::Button::StateUp, now);
 }
 
 void setup()
@@ -82,14 +88,16 @@ void setup()
   }
   else
   {
-    state.mode = ModeNau7802NotFound;
+    state.mode = AppModeTagNau7802NotFound;
   }
 
-  tasks.push_back([](State &state)
-                  { handleButtons(state.n); });
-  tasks.push_back([](State &state)
+  inputHandlers.push_back(&dashboardInputHandler);
+
+  tasks.push_back([](AppState &state)
+                  { readButtons(state.n); });
+  tasks.push_back([](AppState &state)
                   { readWeight(state.w); });
-  tasks.push_back([](State &state)
+  tasks.push_back([](AppState &state)
                   { updateDisplay(state); });
 }
 
@@ -100,12 +108,12 @@ void loop()
 
   switch (state.mode)
   {
-  case ModeNormal:
+  case AppModeTagNormal:
     break;
-  case ModeNau7802NotFound:
-    state.mode = ModeHalt;
+  case AppModeTagNau7802NotFound:
+    state.mode = AppModeTagHalt;
     break;
-  case ModeHalt:
+  case AppModeTagHalt:
     break;
   }
 }
