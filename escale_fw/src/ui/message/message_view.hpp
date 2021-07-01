@@ -11,6 +11,9 @@ struct MessageViewModel final
   };
 
   Message message;
+
+  bool operator==(const MessageViewModel &other) const;
+  bool operator!=(const MessageViewModel &other) const;
 };
 
 namespace AppHAL
@@ -18,6 +21,6 @@ namespace AppHAL
   struct Display;
 }
 
-void displayMessageView(const MessageViewModel &viewModel, AppHAL::Display &display);
+void renderMessageView(const MessageViewModel &viewModel, AppHAL::Display &display);
 
 #endif

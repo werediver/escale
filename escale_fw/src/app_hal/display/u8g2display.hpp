@@ -11,7 +11,7 @@ namespace AppHAL
   class U8G2Display final : public Display
   {
   public:
-    U8G2Display(U8G2 &u8g2) : u8g2{u8g2} {};
+    explicit U8G2Display(U8G2 &u8g2) : u8g2{u8g2} {};
 
     void clearBuffer() override;
     void sendBuffer() override;

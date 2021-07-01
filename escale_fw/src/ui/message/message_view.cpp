@@ -4,7 +4,17 @@
 
 #include "message_view.hpp"
 
-void displayMessageView(const MessageViewModel &viewModel, AppHAL::Display &display)
+bool MessageViewModel::operator==(const MessageViewModel &other) const
+{
+  return message == other.message;
+}
+
+bool MessageViewModel::operator!=(const MessageViewModel &other) const
+{
+  return !(*this == other);
+}
+
+void renderMessageView(const MessageViewModel &viewModel, AppHAL::Display &display)
 {
   const std::string msg = [&]()
   {

@@ -14,11 +14,6 @@ namespace AppInput
 
   using InputHandler = AppHAL::InputHandler<ButtonTag>;
 
-  class BlankInputHandler final : public InputHandler
-  {
-    void onButtonDown(ButtonTag buttonTag) override {}
-  };
-
 }
 
 #endif

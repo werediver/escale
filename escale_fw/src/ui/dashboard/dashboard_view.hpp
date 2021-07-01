@@ -7,6 +7,9 @@ struct DashboardViewModel final
 {
   std::int32_t n;
   float weight;
+
+  bool operator==(const DashboardViewModel &other) const;
+  bool operator!=(const DashboardViewModel &other) const;
 };
 
 namespace AppHAL
@@ -14,6 +17,6 @@ namespace AppHAL
   struct Display;
 }
 
-void displayDashboardView(const DashboardViewModel &viewModel, AppHAL::Display &display);
+void renderDashboardView(const DashboardViewModel &viewModel, AppHAL::Display &display);
 
 #endif
