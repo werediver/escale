@@ -7,20 +7,18 @@
 namespace AppHAL
 {
 
-  template <typename _ButtonTag>
+  template <typename InputEvent>
   struct InputHandler
   {
-    using ButtonTag = _ButtonTag;
-
     virtual ~InputHandler() {}
 
-    virtual void onButtonDown(ButtonTag buttonTag) = 0;
+    virtual void handleInputEvent(const InputEvent &) = 0;
   };
 
-  template <typename ButtonTag>
-  struct BlankInputHandler final : InputHandler<ButtonTag>
+  template <typename InputEvent>
+  struct BlankInputHandler final : InputHandler<InputEvent>
   {
-    void onButtonDown(ButtonTag buttonTag) override {}
+    void handleInputEvent(const InputEvent &) override {}
   };
 
 }

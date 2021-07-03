@@ -6,13 +6,27 @@
 namespace AppInput
 {
 
-  enum ButtonTag
+  struct ButtonEvent final
   {
-    ButtonA,
-    ButtonB
+    enum ButtonTag
+    {
+      ButtonTagA,
+      ButtonTagB
+    };
+
+    enum Type
+    {
+      TypeButtonDown
+    };
+
+    ButtonTag buttonTag;
+    Type type;
   };
 
-  using InputHandler = AppHAL::InputHandler<ButtonTag>;
+  // Use `std:variant` to add other event types.
+  using InputEvent = ButtonEvent;
+
+  using InputHandler = AppHAL::InputHandler<InputEvent>;
 
 }
 

@@ -32,7 +32,7 @@ using Task = void (*)(Context &);
 std::vector<Task<AppState>> tasks;
 
 std::vector<std::shared_ptr<AppInput::InputHandler>> inputHandlerStack{
-    std::make_shared<AppHAL::BlankInputHandler<AppInput::InputHandler::ButtonTag>>()};
+    std::make_shared<AppHAL::BlankInputHandler<AppInput::InputEvent>>()};
 
 std::vector<std::shared_ptr<View<AppState>>> viewStack;
 bool needsRender = true;
@@ -41,9 +41,13 @@ void readButtons(int32_t &n)
 {
   auto &inputHandler = *inputHandlerStack.back();
   if (buttonA.clearIsDownPending())
-    inputHandler.onButtonDown(AppInput::ButtonA);
+    inputHandler.handleInputEvent(
+        {AppInput::ButtonEvent::ButtonTagA,
+         AppInput::ButtonEvent::TypeButtonDown});
   if (buttonB.clearIsDownPending())
-    inputHandler.onButtonDown(AppInput::ButtonB);
+    inputHandler.handleInputEvent(
+        {AppInput::ButtonEvent::ButtonTagB,
+         AppInput::ButtonEvent::TypeButtonDown});
 }
 
 void readWeight(float &w)

@@ -1,14 +1,16 @@
 #include "dashboard_input_handler.hpp"
 
-void DashboardInputHandler::onButtonDown(AppInput::ButtonTag buttonTag)
+void DashboardInputHandler::handleInputEvent(const AppInput::ButtonEvent &buttonEvent)
 {
-  switch (buttonTag)
+  switch (buttonEvent.buttonTag)
   {
-  case AppInput::ButtonA:
-    n += 1;
+  case AppInput::ButtonEvent::ButtonTagA:
+    if (buttonEvent.type == AppInput::ButtonEvent::TypeButtonDown)
+      n += 1;
     break;
-  case AppInput::ButtonB:
-    n -= 1;
+  case AppInput::ButtonEvent::ButtonTagB:
+    if (buttonEvent.type == AppInput::ButtonEvent::TypeButtonDown)
+      n -= 1;
     break;
   }
 }

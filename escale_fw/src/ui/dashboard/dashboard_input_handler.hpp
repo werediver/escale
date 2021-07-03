@@ -9,7 +9,7 @@ class DashboardInputHandler final : public AppInput::InputHandler
 public:
   DashboardInputHandler(std::int32_t &n) : n{n} {}
 
-  void onButtonDown(AppInput::ButtonTag buttonTag) override;
+  void handleInputEvent(const AppInput::InputEvent &inputEvent) override;
 
 private:
   std::int32_t &n;
