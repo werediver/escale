@@ -23,33 +23,6 @@ namespace AppHAL
     void onButtonDown(ButtonTag buttonTag) override {}
   };
 
-  template <typename ButtonTag>
-  class InputHandlerStack final
-  {
-  public:
-    InputHandlerStack()
-        : inputHandlers{std::shared_ptr<BlankInputHandler<ButtonTag>>(
-              new BlankInputHandler<ButtonTag>{})} {}
-
-    void push_back(std::shared_ptr<InputHandler<ButtonTag>> inputHandler)
-    {
-      inputHandlers.push_back(inputHandler);
-    }
-
-    void pop_back()
-    {
-      inputHandlers.pop_back();
-    }
-
-    std::shared_ptr<InputHandler<ButtonTag>> back()
-    {
-      return inputHandlers.back();
-    }
-
-  private:
-    std::vector<std::shared_ptr<InputHandler<ButtonTag>>> inputHandlers;
-  };
-
 }
 
 #endif

@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
-#include <vector>
 #include <memory>
+#include <vector>
 
 #include "app_hal/button.hpp"
 #include "app_hal/display/u8g2display.hpp"
@@ -31,17 +31,19 @@ using Task = void (*)(Context &);
 
 std::vector<Task<AppState>> tasks;
 
-AppHAL::InputHandlerStack<AppInput::InputHandler::ButtonTag> inputHandlerStack;
+std::vector<std::shared_ptr<AppInput::InputHandler>> inputHandlerStack{
+    std::make_shared<AppHAL::BlankInputHandler<AppInput::InputHandler::ButtonTag>>()};
 
 std::vector<std::shared_ptr<View<AppState>>> viewStack;
 bool needsRender = true;
 
 void readButtons(int32_t &n)
 {
+  auto &inputHandler = *inputHandlerStack.back();
   if (buttonA.clearIsDownPending())
-    inputHandlerStack.back().get()->onButtonDown(AppInput::ButtonA);
+    inputHandler.onButtonDown(AppInput::ButtonA);
   if (buttonB.clearIsDownPending())
-    inputHandlerStack.back().get()->onButtonDown(AppInput::ButtonB);
+    inputHandler.onButtonDown(AppInput::ButtonB);
 }
 
 void readWeight(float &w)
@@ -53,7 +55,7 @@ void updateDisplay(const AppState &state)
 {
   if (!viewStack.empty())
   {
-    auto &view = *viewStack.back().get();
+    auto &view = *viewStack.back();
     view.build(state);
     if (needsRender || view.needsRender())
     {
@@ -92,15 +94,13 @@ void setup()
     state.mode = AppModeTagNau7802NotFound;
   }
 
-  inputHandlerStack.push_back(std::shared_ptr<AppInput::InputHandler>(
-      new DashboardInputHandler{state.n}));
-  viewStack.push_back(std::shared_ptr<SomeView<AppState, DashboardViewModel>>{
-      new SomeView<AppState, DashboardViewModel>{
-          [](const AppState &state)
-          {
-            return DashboardViewModel{state.n, state.w};
-          },
-          renderDashboardView}});
+  inputHandlerStack.push_back(std::make_shared<DashboardInputHandler>(state.n));
+  viewStack.push_back(std::make_shared<SomeView<AppState, DashboardViewModel>>(
+      [](const AppState &state)
+      {
+        return DashboardViewModel{state.n, state.w};
+      },
+      renderDashboardView));
 
   tasks.push_back([](AppState &state)
                   { readButtons(state.n); });
