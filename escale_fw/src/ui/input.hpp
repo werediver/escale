@@ -3,7 +3,7 @@
 
 #include "app_hal/input_handler.hpp"
 
-namespace AppInput
+namespace UI
 {
 
   struct ButtonEvent final

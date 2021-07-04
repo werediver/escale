@@ -2,14 +2,14 @@
 #define __DASHBOARD_INPUT_HANDLER_HPP__
 
 #include <cstdint>
-#include "../../app_input.hpp"
+#include "../input.hpp"
 
-class DashboardInputHandler final : public AppInput::InputHandler
+class DashboardInputHandler final : public UI::InputHandler
 {
 public:
   DashboardInputHandler(std::int32_t &n) : n{n} {}
 
-  void handleInputEvent(const AppInput::InputEvent &inputEvent) override;
+  void handleInputEvent(const UI::InputEvent &inputEvent) override;
 
 private:
   std::int32_t &n;

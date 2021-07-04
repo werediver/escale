@@ -6,13 +6,12 @@
 
 #include "app_hal/button.hpp"
 #include "app_hal/display/u8g2display.hpp"
-#include "app_input.hpp"
 #include "app_state.hpp"
 #include "ui/dashboard/dashboard_input_handler.hpp"
 #include "ui/dashboard/dashboard_view.hpp"
 #include "ui/message/message_view.hpp"
-
 #include "ui/view.hpp"
+#include "unit.hpp"
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2{U8G2_R0, U8X8_PIN_NONE, SCL, SDA};
 AppHAL::U8G2Display display{u8g2};
@@ -31,23 +30,20 @@ using Task = void (*)(Context &);
 
 std::vector<Task<AppState>> tasks;
 
-std::vector<std::shared_ptr<AppInput::InputHandler>> inputHandlerStack{
-    std::make_shared<AppHAL::BlankInputHandler<AppInput::InputEvent>>()};
-
-std::vector<std::shared_ptr<View<AppState>>> viewStack;
+std::vector<std::shared_ptr<UI::View<AppState>>> viewStack;
 bool needsRender = true;
 
 void readButtons(int32_t &n)
 {
-  auto &inputHandler = *inputHandlerStack.back();
+  UI::InputHandler &inputHandler = *viewStack.back();
   if (buttonA.clearIsDownPending())
     inputHandler.handleInputEvent(
-        {AppInput::ButtonEvent::ButtonTagA,
-         AppInput::ButtonEvent::TypeButtonDown});
+        {UI::ButtonEvent::ButtonTagA,
+         UI::ButtonEvent::TypeButtonDown});
   if (buttonB.clearIsDownPending())
     inputHandler.handleInputEvent(
-        {AppInput::ButtonEvent::ButtonTagB,
-         AppInput::ButtonEvent::TypeButtonDown});
+        {UI::ButtonEvent::ButtonTagB,
+         UI::ButtonEvent::TypeButtonDown});
 }
 
 void readWeight(float &w)
@@ -98,13 +94,27 @@ void setup()
     state.mode = AppModeTagNau7802NotFound;
   }
 
-  inputHandlerStack.push_back(std::make_shared<DashboardInputHandler>(state.n));
-  viewStack.push_back(std::make_shared<SomeView<AppState, DashboardViewModel>>(
+  viewStack.push_back(std::make_shared<UI::SomeView<AppState, DashboardViewModel, Unit>>(
       [](const AppState &state)
       {
         return DashboardViewModel{state.n, state.w};
       },
-      renderDashboardView));
+      [](Unit) {},
+      renderDashboardView,
+      [](const DashboardViewModel &, const UI::ButtonEvent &buttonEvent, void (*)(Unit))
+      {
+        switch (buttonEvent.buttonTag)
+        {
+        case UI::ButtonEvent::ButtonTagA:
+          if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
+            state.n += 1;
+          break;
+        case UI::ButtonEvent::ButtonTagB:
+          if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
+            state.n -= 1;
+          break;
+        }
+      }));
 
   tasks.push_back([](AppState &state)
                   { readButtons(state.n); });
