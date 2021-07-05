@@ -1,17 +1,12 @@
-#include <Arduino.h>
-#include <U8g2lib.h>
-#include "SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h"
-#include <memory>
-#include <vector>
-
 #include "app_hal/button.hpp"
 #include "app_hal/display/u8g2display.hpp"
 #include "app_state.hpp"
-#include "ui/dashboard/dashboard_input_handler.hpp"
 #include "ui/dashboard/dashboard_view.hpp"
 #include "ui/message/message_view.hpp"
-#include "ui/view.hpp"
-#include "unit.hpp"
+
+#include <Arduino.h>
+#include <U8g2lib.h>
+#include <SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h>
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2{U8G2_R0, U8X8_PIN_NONE, SCL, SDA};
 AppHAL::U8G2Display display{u8g2};
@@ -94,24 +89,20 @@ void setup()
     state.mode = AppModeTagNau7802NotFound;
   }
 
-  viewStack.push_back(std::make_shared<UI::SomeView<AppState, DashboardViewModel, Unit>>(
+  viewStack.push_back(std::make_shared<UI::DashboardView<AppState>>(
       [](const AppState &state)
       {
-        return DashboardViewModel{state.n, state.w};
+        return UI::DashboardViewModel{state.n, state.w};
       },
-      [](Unit) {},
-      renderDashboardView,
-      [](const DashboardViewModel &, const UI::ButtonEvent &buttonEvent, void (*)(Unit))
+      [](UI::DashboardAction action)
       {
-        switch (buttonEvent.buttonTag)
+        switch (action)
         {
-        case UI::ButtonEvent::ButtonTagA:
-          if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
-            state.n += 1;
+        case UI::DashboardActionIncrementN:
+          state.n += 1;
           break;
-        case UI::ButtonEvent::ButtonTagB:
-          if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
-            state.n -= 1;
+        case UI::DashboardActionDecrementN:
+          state.n -= 1;
           break;
         }
       }));

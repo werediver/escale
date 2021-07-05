@@ -12,6 +12,7 @@ namespace AppHAL
 namespace UI
 {
 
+  /// A (partially) type-erased version of `SomeView`.
   template <typename State>
   struct View : InputHandler
   {
@@ -23,26 +24,20 @@ namespace UI
   };
 
   template <typename State, typename ViewModel, typename Action>
-  class SomeView final : public View<State>
+  class SomeView : public View<State>
   {
   public:
     using ViewModelFactory = ViewModel (*)(const State &);
     using ActionDispatcher = void (*)(Action);
-    using ViewRenderer = void (*)(const ViewModel &, AppHAL::Display &);
-    using InputHandler = void (*)(const ViewModel &, const InputEvent &, ActionDispatcher);
 
     SomeView(
         ViewModelFactory makeViewModel,
-        ActionDispatcher dispatch,
-        ViewRenderer renderView,
-        InputHandler handleInputEvent)
+        ActionDispatcher dispatch)
         : makeViewModel{makeViewModel},
           _needsRender{true},
-          renderView{renderView},
-          dispatch{dispatch},
-          _handleInputEvent{handleInputEvent} {}
+          dispatch{dispatch} {}
 
-    void build(const State &state) override
+    void build(const State &state) final override
     {
       ViewModel newViewModel = makeViewModel(state);
       if (viewModel != newViewModel)
@@ -52,29 +47,30 @@ namespace UI
       }
     }
 
-    void render(AppHAL::Display &display) override
+    void render(AppHAL::Display &display) final override
     {
-      renderView(viewModel, display);
+      render(viewModel, display);
       _needsRender = false;
     }
 
-    bool needsRender() const override
+    bool needsRender() const final override
     {
       return _needsRender;
     }
 
-    void handleInputEvent(const InputEvent &inputEvent) override
+    void handleInputEvent(const InputEvent &inputEvent) final override
     {
-      _handleInputEvent(viewModel, inputEvent, dispatch);
+      handleInputEvent(viewModel, inputEvent, dispatch);
     }
 
   private:
+    virtual void render(const ViewModel &, AppHAL::Display &) const = 0;
+    virtual void handleInputEvent(const ViewModel &, const InputEvent &, ActionDispatcher) const = 0;
+
     ViewModelFactory makeViewModel;
     ViewModel viewModel;
     bool _needsRender;
-    ViewRenderer renderView;
     ActionDispatcher dispatch;
-    InputHandler _handleInputEvent;
   };
 
 }
