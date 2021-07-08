@@ -1,8 +1,10 @@
 #include "app_hal/button.hpp"
 #include "app_hal/display/u8g2display.hpp"
 #include "app_state.hpp"
+#include "run_loop/run_loop.hpp"
 #include "ui/dashboard/dashboard_view.hpp"
 #include "ui/message/message_view.hpp"
+#include "ui/view_stack_task.hpp"
 
 #include <Arduino.h>
 #include <U8g2lib.h>
@@ -19,45 +21,27 @@ AppHAL::Button buttonA{buttonToggleHoldOffDuration};
 AppHAL::Button buttonB{buttonToggleHoldOffDuration};
 
 AppState state;
-
-template <typename Context>
-using Task = void (*)(Context &);
-
-std::vector<Task<AppState>> tasks;
-
-std::vector<std::shared_ptr<UI::View<AppState>>> viewStack;
-bool needsRender = true;
+RunLoop::RunLoop<AppState> runLoop;
 
 void readButtons(int32_t &n)
 {
-  UI::InputHandler &inputHandler = *viewStack.back();
-  if (buttonA.clearIsDownPending())
-    inputHandler.handleInputEvent(
-        {UI::ButtonEvent::ButtonTagA,
-         UI::ButtonEvent::TypeButtonDown});
-  if (buttonB.clearIsDownPending())
-    inputHandler.handleInputEvent(
-        {UI::ButtonEvent::ButtonTagB,
-         UI::ButtonEvent::TypeButtonDown});
+  if (auto viewStack = runLoop.find<UI::ViewStackTask<AppState>>())
+  {
+    UI::InputHandler &inputHandler = *(*viewStack).back();
+    if (buttonA.clearIsDownPending())
+      inputHandler.handleInputEvent(
+          {UI::ButtonEvent::ButtonTagA,
+           UI::ButtonEvent::TypeButtonDown});
+    if (buttonB.clearIsDownPending())
+      inputHandler.handleInputEvent(
+          {UI::ButtonEvent::ButtonTagB,
+           UI::ButtonEvent::TypeButtonDown});
+  }
 }
 
 void readWeight(float &w)
 {
   w = nau7802.getWeight(true, 1);
-}
-
-void updateDisplay(const AppState &state)
-{
-  if (!viewStack.empty())
-  {
-    auto &view = *viewStack.back();
-    view.build(state);
-    if (needsRender || view.needsRender())
-    {
-      view.render(display);
-      needsRender = false;
-    }
-  }
 }
 
 void updateButtons()
@@ -89,36 +73,38 @@ void setup()
     state.mode = AppModeTagNau7802NotFound;
   }
 
-  viewStack.push_back(std::make_shared<UI::DashboardView<AppState>>(
-      [](const AppState &state)
-      {
-        return UI::DashboardViewModel{state.n, state.w};
-      },
-      [](UI::DashboardAction action)
-      {
-        switch (action)
-        {
-        case UI::DashboardActionIncrementN:
-          state.n += 1;
-          break;
-        case UI::DashboardActionDecrementN:
-          state.n -= 1;
-          break;
-        }
-      }));
+  runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
+      [](RunLoop::RunLoop<AppState> &, AppState &state)
+      { readButtons(state.n); }));
+  runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
+      [](RunLoop::RunLoop<AppState> &, AppState &state)
+      { readWeight(state.w); }));
+  runLoop.push_back(std::make_shared<UI::ViewStackTask<AppState>>(display));
 
-  tasks.push_back([](AppState &state)
-                  { readButtons(state.n); });
-  tasks.push_back([](AppState &state)
-                  { readWeight(state.w); });
-  tasks.push_back([](AppState &state)
-                  { updateDisplay(state); });
+  if (auto viewStack = runLoop.find<UI::ViewStackTask<AppState>>())
+  {
+    (*viewStack)
+        .push_back(std::make_shared<UI::DashboardView<AppState>>(
+            [](const AppState &state)
+            { return UI::DashboardViewModel{state.n, state.w}; },
+            [](UI::DashboardAction action)
+            {
+              switch (action)
+              {
+              case UI::DashboardActionIncrementN:
+                state.n += 1;
+                break;
+              case UI::DashboardActionDecrementN:
+                state.n -= 1;
+                break;
+              }
+            }));
+  }
 }
 
 void loop()
 {
-  for (const auto &task : tasks)
-    task(state);
+  runLoop.run(state);
 
   switch (state.mode)
   {
