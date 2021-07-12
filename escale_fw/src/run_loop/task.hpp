@@ -1,5 +1,5 @@
-#ifndef __TASK_HPP__
-#define __TASK_HPP__
+#ifndef RUN_LOOP_TASK_HPP
+#define RUN_LOOP_TASK_HPP
 
 namespace RunLoop
 {
@@ -10,7 +10,7 @@ namespace RunLoop
   template <typename State>
   struct Task
   {
-    virtual ~Task() {}
+    virtual ~Task() = default;
 
     virtual void run(RunLoop<State> &, State &) = 0;
   };
@@ -21,7 +21,7 @@ namespace RunLoop
   public:
     using Func = void (*)(RunLoop<State> &, State &);
 
-    FuncTask(Func run) : _run{run} {}
+    explicit FuncTask(Func run) : _run{run} {}
 
     void run(RunLoop<State> &runLoop, State &state) override
     {

@@ -1,5 +1,5 @@
-#ifndef __DISPLAY_HPP__
-#define __DISPLAY_HPP__
+#ifndef APP_HAL_DISPLAY_DISPLAY_HPP
+#define APP_HAL_DISPLAY_DISPLAY_HPP
 
 #include <cstdint>
 #include <string>
@@ -15,7 +15,7 @@ namespace AppHAL
       std::uint8_t y;
     };
 
-    virtual ~Display() {}
+    virtual ~Display() = default;
 
     virtual void clearBuffer() = 0;
     virtual void sendBuffer() = 0;

@@ -1,7 +1,8 @@
-#ifndef __VIEW_STACK_TASK_HPP__
-#define __VIEW_STACK_TASK_HPP__
+#ifndef UI_VIEW_STACK_TASK_HPP
+#define UI_VIEW_STACK_TASK_HPP
 
 #include "../run_loop/task.hpp"
+#include "view.hpp"
 
 namespace AppHAL
 {
@@ -15,7 +16,7 @@ namespace UI
   class ViewStackTask final : public RunLoop::Task<State>
   {
   public:
-    ViewStackTask(AppHAL::Display &display) : display{display} {}
+    explicit ViewStackTask(AppHAL::Display &display) : display{display} {}
 
     void run(RunLoop::RunLoop<State> &, State &state) override
     {
@@ -46,6 +47,7 @@ namespace UI
     bool needsRender = true;
     AppHAL::Display &display;
   };
+
 }
 
 #endif

@@ -1,7 +1,8 @@
-#ifndef __VIEW_HPP__
-#define __VIEW_HPP__
+#ifndef UI_VIEW_HPP
+#define UI_VIEW_HPP
 
-#include <utility> // std::move()
+#include <functional> // std::function
+#include <utility>    // std::move()
 #include "input.hpp"
 
 namespace AppHAL
@@ -16,11 +17,11 @@ namespace UI
   template <typename State>
   struct View : InputHandler
   {
-    virtual ~View() {}
+    virtual ~View() = default;
 
     virtual void build(const State &state) = 0;
     virtual void render(AppHAL::Display &display) = 0;
-    virtual bool needsRender() const = 0;
+    [[nodiscard]] virtual bool needsRender() const = 0;
   };
 
   template <typename State, typename ViewModel, typename Action>
@@ -28,7 +29,7 @@ namespace UI
   {
   public:
     using ViewModelFactory = ViewModel (*)(const State &);
-    using ActionDispatcher = void (*)(Action);
+    using ActionDispatcher = std::function<void(Action)>;
 
     SomeView(
         ViewModelFactory makeViewModel,
@@ -37,7 +38,7 @@ namespace UI
           _needsRender{true},
           dispatch{dispatch} {}
 
-    void build(const State &state) final override
+    void build(const State &state) final
     {
       ViewModel newViewModel = makeViewModel(state);
       if (viewModel != newViewModel)
@@ -47,18 +48,18 @@ namespace UI
       }
     }
 
-    void render(AppHAL::Display &display) final override
+    void render(AppHAL::Display &display) final
     {
       render(viewModel, display);
       _needsRender = false;
     }
 
-    bool needsRender() const final override
+    bool needsRender() const final
     {
       return _needsRender;
     }
 
-    void handleInputEvent(const InputEvent &inputEvent) final override
+    void handleInputEvent(const InputEvent &inputEvent) final
     {
       handleInputEvent(viewModel, inputEvent, dispatch);
     }

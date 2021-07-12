@@ -1,10 +1,11 @@
-#ifndef __DASHBOARD_VIEW_HPP__
-#define __DASHBOARD_VIEW_HPP__
+#ifndef UI_DASHBOARD_DASHBOARD_VIEW_HPP
+#define UI_DASHBOARD_DASHBOARD_VIEW_HPP
 
+#include "../view.hpp"
 #include <cstdint>
 #include <fmt/core.h>
 #include <fmt/format.h>
-#include "../view.hpp"
+#include <functional> // std::function
 
 namespace UI
 {
@@ -29,7 +30,7 @@ namespace UI
   {
   public:
     using ViewModelFactory = DashboardViewModel (*)(const State &);
-    using ActionDispatcher = void (*)(DashboardAction);
+    using ActionDispatcher = std::function<void(DashboardAction)>;
 
     DashboardView(
         ViewModelFactory makeViewModel,

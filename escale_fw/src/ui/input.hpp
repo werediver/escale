@@ -1,5 +1,5 @@
-#ifndef __APP_INPUT_HPP__
-#define __APP_INPUT_HPP__
+#ifndef UI_INPUT_HPP
+#define UI_INPUT_HPP
 
 #include "app_hal/input_handler.hpp"
 

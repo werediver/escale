@@ -1,5 +1,5 @@
-#ifndef __RUN_LOOP_HPP__
-#define __RUN_LOOP_HPP__
+#ifndef RUN_LOOP_RUN_LOOP_HPP
+#define RUN_LOOP_RUN_LOOP_HPP
 
 #include <memory>
 #include <vector>
@@ -34,6 +34,19 @@ namespace RunLoop
         if (auto result = std::dynamic_pointer_cast<T>(task))
         {
           return result;
+        }
+      }
+      return nullptr;
+    }
+
+    template <typename T>
+    std::shared_ptr<T> find(const T *target)
+    {
+      for (auto &task : tasks)
+      {
+        if (task.get() == target)
+        {
+          return std::dynamic_pointer_cast<T>(task);
         }
       }
       return nullptr;

@@ -2,13 +2,14 @@
 #include "app_hal/display/u8g2display.hpp"
 #include "app_state.hpp"
 #include "run_loop/run_loop.hpp"
+#include "ui/dashboard/dashboard_task.hpp"
 #include "ui/dashboard/dashboard_view.hpp"
 #include "ui/message/message_view.hpp"
 #include "ui/view_stack_task.hpp"
 
 #include <Arduino.h>
-#include <U8g2lib.h>
 #include <SparkFun_Qwiic_Scale_NAU7802_Arduino_Library.h>
+#include <U8g2lib.h>
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2{U8G2_R0, U8X8_PIN_NONE, SCL, SDA};
 AppHAL::U8G2Display display{u8g2};
@@ -66,7 +67,7 @@ void setup()
   {
     nau7802.calculateZeroOffset();
     // Fake calibration to make `getWeight` return something more meaningful then ±inf.
-    nau7802.setCalibrationFactor((20000 - nau7802.getZeroOffset()) / 1);
+    nau7802.setCalibrationFactor((20000 - nau7802.getZeroOffset()) / 1.0);
   }
   else
   {
@@ -80,26 +81,9 @@ void setup()
       [](RunLoop::RunLoop<AppState> &, AppState &state)
       { readWeight(state.w); }));
   runLoop.push_back(std::make_shared<UI::ViewStackTask<AppState>>(display));
-
-  if (auto viewStack = runLoop.find<UI::ViewStackTask<AppState>>())
-  {
-    (*viewStack)
-        .push_back(std::make_shared<UI::DashboardView<AppState>>(
-            [](const AppState &state)
-            { return UI::DashboardViewModel{state.n, state.w}; },
-            [](UI::DashboardAction action)
-            {
-              switch (action)
-              {
-              case UI::DashboardActionIncrementN:
-                state.n += 1;
-                break;
-              case UI::DashboardActionDecrementN:
-                state.n -= 1;
-                break;
-              }
-            }));
-  }
+  runLoop.push_back(std::make_shared<UI::DashboardTask<AppState>>(
+      [](const AppState &state)
+      { return UI::DashboardViewModel{state.n, state.w}; }));
 }
 
 void loop()

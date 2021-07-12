@@ -1,5 +1,5 @@
-#ifndef __MAKE_VISITOR_HPP__
-#define __MAKE_VISITOR_HPP__
+#ifndef OVERLOAD_HPP
+#define OVERLOAD_HPP
 
 // References:
 // - std::visit is everything wrong with modern C++

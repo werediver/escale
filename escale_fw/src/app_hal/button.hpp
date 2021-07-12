@@ -1,5 +1,5 @@
-#ifndef __BUTTON_HPP__
-#define __BUTTON_HPP__
+#ifndef APP_HAL_BUTTON_HPP
+#define APP_HAL_BUTTON_HPP
 
 namespace AppHAL
 {

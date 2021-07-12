@@ -1,5 +1,5 @@
-#ifndef __MESSAGE_VIEW_HPP__
-#define __MESSAGE_VIEW_HPP__
+#ifndef UI_MESSAGE_MESSAGE_VIEW_HPP
+#define UI_MESSAGE_MESSAGE_VIEW_HPP
 
 struct MessageViewModel final
 {

@@ -1,5 +1,5 @@
-#ifndef __UNIT_HPP__
-#define __UNIT_HPP__
+#ifndef UNIT_HPP
+#define UNIT_HPP
 
 struct Unit final
 {

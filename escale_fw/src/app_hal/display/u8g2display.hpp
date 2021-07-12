@@ -1,5 +1,5 @@
-#ifndef __U8G2DISPLAY_HPP__
-#define __U8G2DISPLAY_HPP__
+#ifndef APP_HAL_DISPLAY_U8G2DISPLAY_HPP
+#define APP_HAL_DISPLAY_U8G2DISPLAY_HPP
 
 #include "display.hpp"
 
