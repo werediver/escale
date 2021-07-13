@@ -20,11 +20,11 @@ void renderMessageView(const MessageViewModel &viewModel, AppHAL::Display &displ
   {
     switch (viewModel.message)
     {
-    case MessageViewModel::MessageTaring:
+    case MessageViewModel::Message::Taring:
       return "Taring...";
-    case MessageViewModel::MessageCalibrating:
+    case MessageViewModel::Message::Calibrating:
       return "Calibrating 100 g weight...";
-    case MessageViewModel::MessageNAU7802NotFound:
+    case MessageViewModel::Message::NAU7802NotFound:
       return "E: NAU7802 not found";
     }
     throw std::invalid_argument(

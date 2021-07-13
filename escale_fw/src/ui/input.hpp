@@ -8,15 +8,15 @@ namespace UI
 
   struct ButtonEvent final
   {
-    enum ButtonTag
+    enum class ButtonTag
     {
-      ButtonTagA,
-      ButtonTagB
+      A,
+      B
     };
 
-    enum Type
+    enum class Type
     {
-      TypeButtonDown
+      ButtonDown
     };
 
     ButtonTag buttonTag;

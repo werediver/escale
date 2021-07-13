@@ -3,11 +3,11 @@
 
 struct MessageViewModel final
 {
-  enum Message
+  enum class Message
   {
-    MessageTaring,
-    MessageCalibrating,
-    MessageNAU7802NotFound
+    Taring,
+    Calibrating,
+    NAU7802NotFound
   };
 
   Message message;

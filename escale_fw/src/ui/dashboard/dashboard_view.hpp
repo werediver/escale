@@ -19,10 +19,10 @@ namespace UI
     bool operator!=(const DashboardViewModel &other) const;
   };
 
-  enum DashboardAction
+  enum class DashboardAction
   {
-    DashboardActionIncrementN,
-    DashboardActionDecrementN,
+    IncrementN,
+    DecrementN,
   };
 
   template <typename State>
@@ -53,13 +53,13 @@ namespace UI
     {
       switch (buttonEvent.buttonTag)
       {
-      case UI::ButtonEvent::ButtonTagA:
-        if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
-          dispatch(DashboardActionIncrementN);
+      case UI::ButtonEvent::ButtonTag::A:
+        if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
+          dispatch(DashboardAction::IncrementN);
         break;
-      case UI::ButtonEvent::ButtonTagB:
-        if (buttonEvent.type == UI::ButtonEvent::TypeButtonDown)
-          dispatch(DashboardActionDecrementN);
+      case UI::ButtonEvent::ButtonTag::B:
+        if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
+          dispatch(DashboardAction::DecrementN);
         break;
       }
     }

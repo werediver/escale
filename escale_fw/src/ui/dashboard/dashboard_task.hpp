@@ -12,19 +12,18 @@ namespace UI
   class DashboardTask final : public RunLoop::Task<State>
   {
   private:
-    enum Action
+    enum class Action
     {
-      ActionInit,
-      ActionInc,
-      ActionDec
+      Init,
+      Inc,
+      Dec
     };
 
   public:
     using ViewModelFactory = typename DashboardView<State>::ViewModelFactory;
 
     DashboardTask(ViewModelFactory makeViewModel)
-        : makeViewModel{makeViewModel},
-          actions{ActionInit} {}
+        : makeViewModel{makeViewModel} {}
 
     void run(RunLoop::RunLoop<State> &runLoop, State &state) override
     {
@@ -35,7 +34,7 @@ namespace UI
 
         switch (action)
         {
-        case ActionInit:
+        case Action::Init:
         {
           std::weak_ptr weakSelf{runLoop.find(this)};
           auto viewStack = runLoop.template find<ViewStackTask<State>>();
@@ -52,11 +51,11 @@ namespace UI
           }
           break;
         }
-        case ActionInc:
-          state.n += 1;
+        case Action::Inc:
+          state.n += 1; // FIXME: Don't assume the type of `state`
           break;
-        case ActionDec:
-          state.n -= 1;
+        case Action::Dec:
+          state.n -= 1; // FIXME: Don't assume the type of `state`
           break;
         }
       }
@@ -66,18 +65,18 @@ namespace UI
     {
       switch (action)
       {
-      case DashboardActionIncrementN:
-        actions.push_back(ActionInc);
+      case DashboardAction::IncrementN:
+        actions.push_back(Action::Inc);
         break;
-      case DashboardActionDecrementN:
-        actions.push_back(ActionDec);
+      case DashboardAction::DecrementN:
+        actions.push_back(Action::Dec);
         break;
       }
     }
 
   private:
     ViewModelFactory makeViewModel;
-    std::vector<Action> actions;
+    std::vector<Action> actions{Action::Init};
   };
 
 }

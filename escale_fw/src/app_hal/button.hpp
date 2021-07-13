@@ -7,10 +7,10 @@ namespace AppHAL
   class Button final
   {
   public:
-    enum State
+    enum class State
     {
-      StateDown,
-      StateUp
+      Down,
+      Up
     };
 
     explicit Button(unsigned long toggleHoldOffDuration);
@@ -24,12 +24,12 @@ namespace AppHAL
     bool clearIsUpPending();
 
   private:
-    State state;
+    State state = State::Up;
     /// The timestamp of the last state change according to `now` in
     /// the corresponding `update(newState, now)` call.
-    unsigned long timestamp;
-    volatile bool isDownPending;
-    volatile bool isUpPending;
+    unsigned long timestamp = 0;
+    volatile bool isDownPending = false;
+    volatile bool isUpPending = false;
     const unsigned long toggleHoldOffDuration;
   };
 

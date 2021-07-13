@@ -31,12 +31,12 @@ void readButtons(int32_t &n)
     UI::InputHandler &inputHandler = *(*viewStack).back();
     if (buttonA.clearIsDownPending())
       inputHandler.handleInputEvent(
-          {UI::ButtonEvent::ButtonTagA,
-           UI::ButtonEvent::TypeButtonDown});
+          {UI::ButtonEvent::ButtonTag::A,
+           UI::ButtonEvent::Type::ButtonDown});
     if (buttonB.clearIsDownPending())
       inputHandler.handleInputEvent(
-          {UI::ButtonEvent::ButtonTagB,
-           UI::ButtonEvent::TypeButtonDown});
+          {UI::ButtonEvent::ButtonTag::B,
+           UI::ButtonEvent::Type::ButtonDown});
   }
 }
 
@@ -48,8 +48,8 @@ void readWeight(float &w)
 void updateButtons()
 {
   const unsigned long now = millis();
-  buttonA.update(digitalRead(buttonAPin) == 0 ? AppHAL::Button::StateDown : AppHAL::Button::StateUp, now);
-  buttonB.update(digitalRead(buttonBPin) == 0 ? AppHAL::Button::StateDown : AppHAL::Button::StateUp, now);
+  buttonA.update(digitalRead(buttonAPin) == 0 ? AppHAL::Button::State::Down : AppHAL::Button::State::Up, now);
+  buttonB.update(digitalRead(buttonBPin) == 0 ? AppHAL::Button::State::Down : AppHAL::Button::State::Up, now);
 }
 
 void setup()
@@ -71,7 +71,7 @@ void setup()
   }
   else
   {
-    state.mode = AppModeTagNau7802NotFound;
+    state.mode = AppModeTag::NAU7802NotFound;
   }
 
   runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
@@ -92,12 +92,12 @@ void loop()
 
   switch (state.mode)
   {
-  case AppModeTagNormal:
+  case AppModeTag::Normal:
     break;
-  case AppModeTagNau7802NotFound:
-    state.mode = AppModeTagHalt;
+  case AppModeTag::NAU7802NotFound:
+    state.mode = AppModeTag::Halt;
     break;
-  case AppModeTagHalt:
+  case AppModeTag::Halt:
     break;
   }
 }

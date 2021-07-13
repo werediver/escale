@@ -35,7 +35,6 @@ namespace UI
         ViewModelFactory makeViewModel,
         ActionDispatcher dispatch)
         : makeViewModel{makeViewModel},
-          _needsRender{true},
           dispatch{dispatch} {}
 
     void build(const State &state) final
@@ -70,7 +69,7 @@ namespace UI
 
     ViewModelFactory makeViewModel;
     ViewModel viewModel;
-    bool _needsRender;
+    bool _needsRender = true;
     ActionDispatcher dispatch;
   };
 

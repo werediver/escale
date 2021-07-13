@@ -3,11 +3,11 @@
 
 #include <cstdint>
 
-enum AppModeTag
+enum class AppModeTag
 {
-  AppModeTagNormal,
-  AppModeTagNau7802NotFound,
-  AppModeTagHalt
+  Normal,
+  NAU7802NotFound,
+  Halt
 };
 
 struct AppState

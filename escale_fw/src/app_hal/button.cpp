@@ -4,11 +4,7 @@ namespace AppHAL
 {
 
   Button::Button(unsigned long toggleHoldOffDuration)
-      : state{StateUp},
-        timestamp{0},
-        isDownPending{false},
-        isUpPending{false},
-        toggleHoldOffDuration{toggleHoldOffDuration} {}
+      : toggleHoldOffDuration{toggleHoldOffDuration} {}
 
   void Button::update(const State newState, const unsigned long now)
   {
@@ -23,10 +19,10 @@ namespace AppHAL
       {
         switch (state)
         {
-        case StateDown:
+        case State::Down:
           isDownPending = true;
           break;
-        case StateUp:
+        case State::Up:
           isUpPending = true;
           break;
         }
