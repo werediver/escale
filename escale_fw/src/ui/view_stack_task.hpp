@@ -39,7 +39,7 @@ namespace UI
 
     std::shared_ptr<View<State>> back()
     {
-      return viewStack.back();
+      return !viewStack.empty() ? viewStack.back() : nullptr;
     }
 
   private:

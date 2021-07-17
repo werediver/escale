@@ -26,17 +26,19 @@ RunLoop::RunLoop<AppState> runLoop;
 
 void readButtons(int32_t &n)
 {
-  if (auto viewStack = runLoop.find<UI::ViewStackTask<AppState>>())
+  if (const auto pViewStack = runLoop.find<UI::ViewStackTask<AppState>>())
   {
-    UI::InputHandler &inputHandler = *(*viewStack).back();
-    if (buttonA.clearIsDownPending())
-      inputHandler.handleInputEvent(
-          {UI::ButtonEvent::ButtonTag::A,
-           UI::ButtonEvent::Type::ButtonDown});
-    if (buttonB.clearIsDownPending())
-      inputHandler.handleInputEvent(
-          {UI::ButtonEvent::ButtonTag::B,
-           UI::ButtonEvent::Type::ButtonDown});
+    if (const auto pInputHandler = pViewStack->back())
+    {
+      if (buttonA.clearIsDownPending())
+        pInputHandler->handleInputEvent(
+            {UI::ButtonEvent::ButtonTag::A,
+             UI::ButtonEvent::Type::ButtonDown});
+      if (buttonB.clearIsDownPending())
+        pInputHandler->handleInputEvent(
+            {UI::ButtonEvent::ButtonTag::B,
+             UI::ButtonEvent::Type::ButtonDown});
+    }
   }
 }
 
