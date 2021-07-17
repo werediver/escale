@@ -24,7 +24,7 @@ AppHAL::Button buttonB{buttonToggleHoldOffDuration};
 AppState state;
 RunLoop::RunLoop<AppState> runLoop;
 
-void readButtons(int32_t &n)
+void readButtons(RunLoop::RunLoop<AppState> &runLoop, int32_t &n)
 {
   if (const auto pViewStack = runLoop.find<UI::ViewStackTask<AppState>>())
   {
@@ -50,8 +50,16 @@ void readWeight(float &w)
 void updateButtons()
 {
   const unsigned long now = millis();
-  buttonA.update(digitalRead(buttonAPin) == 0 ? AppHAL::Button::State::Down : AppHAL::Button::State::Up, now);
-  buttonB.update(digitalRead(buttonBPin) == 0 ? AppHAL::Button::State::Down : AppHAL::Button::State::Up, now);
+  buttonA.update(
+      digitalRead(buttonAPin) == 0
+          ? AppHAL::Button::State::Down
+          : AppHAL::Button::State::Up,
+      now);
+  buttonB.update(
+      digitalRead(buttonBPin) == 0
+          ? AppHAL::Button::State::Down
+          : AppHAL::Button::State::Up,
+      now);
 }
 
 void setup()
@@ -77,13 +85,14 @@ void setup()
   }
 
   runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
-      [](RunLoop::RunLoop<AppState> &, AppState &state)
-      { readButtons(state.n); }));
+      [](RunLoop::RunLoop<AppState> &runLoop, AppState &state)
+      { readButtons(runLoop, state.n); }));
   runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
       [](RunLoop::RunLoop<AppState> &, AppState &state)
       { readWeight(state.w); }));
   runLoop.push_back(std::make_shared<UI::ViewStackTask<AppState>>(display));
   runLoop.push_back(std::make_shared<UI::DashboardTask<AppState>>(
+      [](AppState &state) -> std::int32_t & { return state.n; },
       [](const AppState &state)
       { return UI::DashboardViewModel{state.n, state.w}; }));
 }

@@ -26,7 +26,7 @@ namespace UI
   };
 
   template <typename State>
-  class DashboardView final : public SomeView<State, DashboardViewModel, DashboardAction>
+  class DashboardView final : public BaseView<State, DashboardViewModel, DashboardAction>
   {
   public:
     using ViewModelFactory = DashboardViewModel (*)(const State &);
@@ -35,7 +35,7 @@ namespace UI
     DashboardView(
         ViewModelFactory makeViewModel,
         ActionDispatcher dispatch)
-        : SomeView<State, DashboardViewModel, DashboardAction>{makeViewModel, dispatch} {}
+        : BaseView<State, DashboardViewModel, DashboardAction>{makeViewModel, dispatch} {}
 
   private:
     void render(const DashboardViewModel &viewModel, AppHAL::Display &display) const override
@@ -49,7 +49,10 @@ namespace UI
       display.sendBuffer();
     }
 
-    void handleInputEvent(const DashboardViewModel &, const ButtonEvent &buttonEvent, ActionDispatcher dispatch) const override
+    void handleInputEvent(
+        const DashboardViewModel &,
+        const ButtonEvent &buttonEvent,
+        ActionDispatcher dispatch) const override
     {
       switch (buttonEvent.buttonTag)
       {

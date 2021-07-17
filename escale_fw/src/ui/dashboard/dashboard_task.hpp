@@ -20,10 +20,12 @@ namespace UI
     };
 
   public:
+    using DashboardStateGetter = std::int32_t &(*)(State &);
     using ViewModelFactory = typename DashboardView<State>::ViewModelFactory;
 
-    DashboardTask(ViewModelFactory makeViewModel)
-        : makeViewModel{makeViewModel} {}
+    DashboardTask(DashboardStateGetter getDashboardState, ViewModelFactory makeViewModel)
+        : getDashboardState{getDashboardState},
+          makeViewModel{makeViewModel} {}
 
     void run(RunLoop::RunLoop<State> &runLoop, State &state) override
     {
@@ -46,22 +48,22 @@ namespace UI
                     [weakSelf](DashboardAction action)
                     {
                       if (auto self = weakSelf.lock())
-                        self->handleAction(action);
+                        self->handleDashboardViewAction(action);
                     }));
           }
           break;
         }
         case Action::Inc:
-          state.n += 1; // FIXME: Don't assume the type of `state`
+          getDashboardState(state) += 1;
           break;
         case Action::Dec:
-          state.n -= 1; // FIXME: Don't assume the type of `state`
+          getDashboardState(state) -= 1;
           break;
         }
       }
     }
 
-    void handleAction(DashboardAction action)
+    void handleDashboardViewAction(DashboardAction action)
     {
       switch (action)
       {
@@ -75,6 +77,7 @@ namespace UI
     }
 
   private:
+    DashboardStateGetter getDashboardState;
     ViewModelFactory makeViewModel;
     std::vector<Action> actions{Action::Init};
   };

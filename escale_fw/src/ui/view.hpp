@@ -13,7 +13,7 @@ namespace AppHAL
 namespace UI
 {
 
-  /// A (partially) type-erased version of `SomeView`.
+  /// A (partially) type-erased version of `BaseView`.
   template <typename State>
   struct View : InputHandler
   {
@@ -25,13 +25,13 @@ namespace UI
   };
 
   template <typename State, typename ViewModel, typename Action>
-  class SomeView : public View<State>
+  class BaseView : public View<State>
   {
   public:
     using ViewModelFactory = ViewModel (*)(const State &);
     using ActionDispatcher = std::function<void(Action)>;
 
-    SomeView(
+    BaseView(
         ViewModelFactory makeViewModel,
         ActionDispatcher dispatch)
         : makeViewModel{makeViewModel},
