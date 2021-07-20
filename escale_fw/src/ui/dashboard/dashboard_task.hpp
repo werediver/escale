@@ -2,8 +2,11 @@
 #define UI_DASHBOARD_DASHBOARD_TASK_HPP
 
 #include "../../run_loop/run_loop.hpp"
+#include "../taring/taring_task.hpp"
 #include "../view_stack_task.hpp"
 #include "dashboard_view.hpp"
+
+#include <deque>
 
 namespace UI
 {
@@ -15,34 +18,39 @@ namespace UI
     enum class Action
     {
       Init,
-      Inc,
-      Dec
+      Tare,
+      Calibrate
     };
 
   public:
     using DashboardStateGetter = std::int32_t &(*)(State &);
+    using TaringTaskFactory = std::shared_ptr<TaringTask<State>> (*)();
     using ViewModelFactory = typename DashboardView<State>::ViewModelFactory;
 
-    DashboardTask(DashboardStateGetter getDashboardState, ViewModelFactory makeViewModel)
+    DashboardTask(
+        DashboardStateGetter getDashboardState,
+        TaringTaskFactory makeTaringTask,
+        ViewModelFactory makeViewModel)
         : getDashboardState{getDashboardState},
+          makeTaringTask{makeTaringTask},
           makeViewModel{makeViewModel} {}
 
     void run(RunLoop::RunLoop<State> &runLoop, State &state) override
     {
       if (!actions.empty())
       {
-        const Action action = actions.back();
-        actions.pop_back();
+        const Action action = actions.front();
+        actions.pop_front();
 
         switch (action)
         {
         case Action::Init:
         {
           std::weak_ptr weakSelf{runLoop.find(this)};
-          auto viewStack = runLoop.template find<ViewStackTask<State>>();
-          if (viewStack)
+          auto pViewStack = runLoop.template find<ViewStackTask<State>>();
+          if (pViewStack)
           {
-            (*viewStack)
+            (*pViewStack)
                 .push_back(std::make_shared<DashboardView<State>>(
                     makeViewModel,
                     [weakSelf](DashboardAction action)
@@ -53,10 +61,10 @@ namespace UI
           }
           break;
         }
-        case Action::Inc:
-          getDashboardState(state) += 1;
+        case Action::Tare:
+          runLoop.push_back(makeTaringTask());
           break;
-        case Action::Dec:
+        case Action::Calibrate:
           getDashboardState(state) -= 1;
           break;
         }
@@ -67,19 +75,20 @@ namespace UI
     {
       switch (action)
       {
-      case DashboardAction::IncrementN:
-        actions.push_back(Action::Inc);
+      case DashboardAction::Tare:
+        actions.push_back(Action::Tare);
         break;
-      case DashboardAction::DecrementN:
-        actions.push_back(Action::Dec);
+      case DashboardAction::Calibrate:
+        actions.push_back(Action::Calibrate);
         break;
       }
     }
 
   private:
     DashboardStateGetter getDashboardState;
+    TaringTaskFactory makeTaringTask;
     ViewModelFactory makeViewModel;
-    std::vector<Action> actions{Action::Init};
+    std::deque<Action> actions{Action::Init};
   };
 
 }

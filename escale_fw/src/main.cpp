@@ -5,6 +5,7 @@
 #include "ui/dashboard/dashboard_task.hpp"
 #include "ui/dashboard/dashboard_view.hpp"
 #include "ui/message/message_view.hpp"
+#include "ui/taring/taring_task.hpp"
 #include "ui/view_stack_task.hpp"
 
 #include <Arduino.h>
@@ -93,6 +94,10 @@ void setup()
   runLoop.push_back(std::make_shared<UI::ViewStackTask<AppState>>(display));
   runLoop.push_back(std::make_shared<UI::DashboardTask<AppState>>(
       [](AppState &state) -> std::int32_t & { return state.n; },
+      []()
+      { return std::make_shared<UI::TaringTask<AppState>>(
+            [](std::uint8_t sampleCount)
+            { nau7802.calculateZeroOffset(sampleCount); }); },
       [](const AppState &state)
       { return UI::DashboardViewModel{state.n, state.w}; }));
 }

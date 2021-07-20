@@ -1,6 +1,7 @@
 #ifndef RUN_LOOP_RUN_LOOP_HPP
 #define RUN_LOOP_RUN_LOOP_HPP
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -13,25 +14,39 @@ namespace RunLoop
   class RunLoop final
   {
   public:
+    using TaskPtr = std::shared_ptr<Task<State>>;
+
     void run(State &state)
     {
-      for (auto &task : tasks)
+      for (auto &pTask : tasks)
       {
-        (*task).run(*this, state);
+        (*pTask).run(*this, state);
       }
     }
 
-    void push_back(std::shared_ptr<Task<State>> task)
+    void push_back(TaskPtr task)
     {
       tasks.push_back(task);
     }
 
-    template <typename T>
-    std::shared_ptr<T> find()
+    /// NOTE: If a task removes itself, the task object may get destructed while running.
+    void remove(const Task<State> *const target)
     {
-      for (auto &task : tasks)
+      tasks.erase(
+          std::remove_if(
+              std::begin(tasks),
+              std::end(tasks),
+              [target](const TaskPtr &pTask)
+              { return pTask.get() == target; }),
+          std::end(tasks));
+    }
+
+    template <typename T>
+    std::shared_ptr<T> find() const
+    {
+      for (auto &pTask : tasks)
       {
-        if (auto result = std::dynamic_pointer_cast<T>(task))
+        if (auto result = std::dynamic_pointer_cast<T>(pTask))
         {
           return result;
         }
@@ -40,13 +55,13 @@ namespace RunLoop
     }
 
     template <typename T>
-    std::shared_ptr<T> find(const T *target)
+    std::shared_ptr<T> find(const T *const target) const
     {
-      for (auto &task : tasks)
+      for (auto &pTask : tasks)
       {
-        if (task.get() == target)
+        if (pTask.get() == target)
         {
-          return std::dynamic_pointer_cast<T>(task);
+          return std::dynamic_pointer_cast<T>(pTask);
         }
       }
       return nullptr;

@@ -21,8 +21,8 @@ namespace UI
 
   enum class DashboardAction
   {
-    IncrementN,
-    DecrementN,
+    Tare,
+    Calibrate,
   };
 
   template <typename State>
@@ -58,11 +58,11 @@ namespace UI
       {
       case UI::ButtonEvent::ButtonTag::A:
         if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
-          dispatch(DashboardAction::IncrementN);
+          dispatch(DashboardAction::Tare);
         break;
       case UI::ButtonEvent::ButtonTag::B:
         if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
-          dispatch(DashboardAction::DecrementN);
+          dispatch(DashboardAction::Calibrate);
         break;
       }
     }
