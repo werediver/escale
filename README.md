@@ -11,4 +11,4 @@ The hardware prototype is assembled on a breadboard and consists of the followin
 - [MikroE Load Cell 2 Click](https://www.mikroe.com/load-cell-2-click)
 - Two 12 mm THT-mount push-buttons
 
-![eScale Prototype Zero](images/escale_prototype_zero.jpg)
+![eScale prototype zero with a table](images/escale_prototype_zero_with_table.jpg)
