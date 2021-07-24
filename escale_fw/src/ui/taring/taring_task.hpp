@@ -2,6 +2,7 @@
 #define UI_TARING_TARING_TASK_HPP
 
 #include "../../run_loop/task.hpp"
+#include "../../unit.hpp"
 #include "../view_stack_task.hpp"
 #include "taring_view.hpp"
 
@@ -10,8 +11,10 @@
 namespace UI
 {
 
+  using TaringTaskState = Unit;
+
   template <typename State>
-  class TaringTask final : public RunLoop::Task<State>
+  class TaringTask final : public RunLoop::BaseTask<State, TaringTaskState>
   {
   private:
     enum class Action
@@ -24,9 +27,14 @@ namespace UI
   public:
     using Tare = void (*)(std::uint8_t sampleCount);
 
-    TaringTask(Tare tare) : tare{tare} {}
+    TaringTask(Tare tare)
+        : RunLoop::BaseTask<State, TaringTaskState>(
+              [](auto)
+              { return Unit(); }),
+          tare{tare} {}
 
-    void run(RunLoop::RunLoop<State> &runLoop, State &state) override
+  private:
+    void run(RunLoop::RunLoop<State> &runLoop, TaringTaskState state) override
     {
       if (!actions.empty())
       {

@@ -2,6 +2,7 @@
 #define UI_DASHBOARD_DASHBOARD_TASK_HPP
 
 #include "../../run_loop/run_loop.hpp"
+#include "../../unit.hpp"
 #include "../taring/taring_task.hpp"
 #include "../view_stack_task.hpp"
 #include "dashboard_view.hpp"
@@ -11,8 +12,10 @@
 namespace UI
 {
 
+  using DashboardTaskState = Unit;
+
   template <typename State>
-  class DashboardTask final : public RunLoop::Task<State>
+  class DashboardTask final : public RunLoop::BaseTask<State, DashboardTaskState>
   {
   private:
     enum class Action
@@ -23,19 +26,19 @@ namespace UI
     };
 
   public:
-    using DashboardStateGetter = std::int32_t &(*)(State &);
     using TaringTaskFactory = std::shared_ptr<TaringTask<State>> (*)();
     using ViewModelFactory = typename DashboardView<State>::ViewModelFactory;
 
     DashboardTask(
-        DashboardStateGetter getDashboardState,
         TaringTaskFactory makeTaringTask,
         ViewModelFactory makeViewModel)
-        : getDashboardState{getDashboardState},
-          makeTaringTask{makeTaringTask},
-          makeViewModel{makeViewModel} {}
+        : RunLoop::BaseTask<State, DashboardTaskState>{
+              [](auto)
+              { return Unit(); }},
+          makeTaringTask{makeTaringTask}, makeViewModel{makeViewModel} {}
 
-    void run(RunLoop::RunLoop<State> &runLoop, State &state) override
+  private:
+    void run(RunLoop::RunLoop<State> &runLoop, DashboardTaskState state) override
     {
       if (!actions.empty())
       {
@@ -65,7 +68,6 @@ namespace UI
           runLoop.push_back(makeTaringTask());
           break;
         case Action::Calibrate:
-          getDashboardState(state) -= 1;
           break;
         }
       }
@@ -84,8 +86,6 @@ namespace UI
       }
     }
 
-  private:
-    DashboardStateGetter getDashboardState;
     TaringTaskFactory makeTaringTask;
     ViewModelFactory makeViewModel;
     std::deque<Action> actions{Action::Init};

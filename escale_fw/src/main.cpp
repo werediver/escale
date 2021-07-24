@@ -93,7 +93,6 @@ void setup()
       { readWeight(state.w); }));
   runLoop.push_back(std::make_shared<UI::ViewStackTask<AppState>>(display));
   runLoop.push_back(std::make_shared<UI::DashboardTask<AppState>>(
-      [](AppState &state) -> std::int32_t & { return state.n; },
       []()
       { return std::make_shared<UI::TaringTask<AppState>>(
             [](std::uint8_t sampleCount)
