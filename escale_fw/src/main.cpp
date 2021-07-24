@@ -45,7 +45,7 @@ void readButtons(RunLoop::RunLoop<AppState> &runLoop)
 
 void readWeight(float &w)
 {
-  w = nau7802.getWeight(true, 1);
+  w = nau7802.getWeight(true, 4);
 }
 
 void updateButtons()
