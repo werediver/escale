@@ -3,17 +3,8 @@
 
 #include <cstdint>
 
-enum class AppModeTag
-{
-  Normal,
-  NAU7802NotFound,
-  Halt
-};
-
 struct AppState
 {
-  AppModeTag mode;
-  std::int32_t n;
   float w;
 };
 

@@ -25,7 +25,7 @@ AppHAL::Button buttonB{buttonToggleHoldOffDuration};
 AppState state;
 RunLoop::RunLoop<AppState> runLoop;
 
-void readButtons(RunLoop::RunLoop<AppState> &runLoop, int32_t &n)
+void readButtons(RunLoop::RunLoop<AppState> &runLoop)
 {
   if (const auto pViewStack = runLoop.find<UI::ViewStackTask<AppState>>())
   {
@@ -80,14 +80,10 @@ void setup()
     // Fake calibration to make `getWeight` return something more meaningful then ±inf.
     nau7802.setCalibrationFactor((20000 - nau7802.getZeroOffset()) / 1.0);
   }
-  else
-  {
-    state.mode = AppModeTag::NAU7802NotFound;
-  }
 
   runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
       [](RunLoop::RunLoop<AppState> &runLoop, AppState &state)
-      { readButtons(runLoop, state.n); }));
+      { readButtons(runLoop); }));
   runLoop.push_back(std::make_shared<RunLoop::FuncTask<AppState>>(
       [](RunLoop::RunLoop<AppState> &, AppState &state)
       { readWeight(state.w); }));
@@ -98,21 +94,10 @@ void setup()
             [](std::uint8_t sampleCount)
             { nau7802.calculateZeroOffset(sampleCount); }); },
       [](const AppState &state)
-      { return UI::DashboardViewModel{state.n, state.w}; }));
+      { return UI::DashboardViewModel{state.w}; }));
 }
 
 void loop()
 {
   runLoop.run(state);
-
-  switch (state.mode)
-  {
-  case AppModeTag::Normal:
-    break;
-  case AppModeTag::NAU7802NotFound:
-    state.mode = AppModeTag::Halt;
-    break;
-  case AppModeTag::Halt:
-    break;
-  }
 }

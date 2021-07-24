@@ -7,7 +7,7 @@ namespace UI
 
   bool DashboardViewModel::operator==(const DashboardViewModel &other) const
   {
-    return n == other.n && weight == other.weight;
+    return weight == other.weight;
   }
 
   bool DashboardViewModel::operator!=(const DashboardViewModel &other) const

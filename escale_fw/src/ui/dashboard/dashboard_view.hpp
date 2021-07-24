@@ -12,7 +12,6 @@ namespace UI
 
   struct DashboardViewModel final
   {
-    std::int32_t n;
     float weight;
 
     bool operator==(const DashboardViewModel &other) const;
@@ -41,11 +40,9 @@ namespace UI
     void render(const DashboardViewModel &viewModel, AppHAL::Display &display) const override
     {
       auto s1 = fmt::format(FMT_STRING("w={:8.3f}"), viewModel.weight);
-      auto s2 = fmt::format(FMT_STRING("{:3d}"), viewModel.n);
 
       display.clearBuffer();
       display.drawStr({0, 10}, s1);
-      display.drawStr({100, 10}, s2);
       display.sendBuffer();
     }
 
