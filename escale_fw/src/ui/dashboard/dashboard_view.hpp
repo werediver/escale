@@ -2,7 +2,6 @@
 #define UI_DASHBOARD_DASHBOARD_VIEW_HPP
 
 #include "../view.hpp"
-#include <cstdint>
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <functional> // std::function
@@ -18,28 +17,28 @@ namespace UI
     bool operator!=(const DashboardViewModel &other) const;
   };
 
-  enum class DashboardAction
+  enum class DashboardViewAction
   {
     Tare,
     Calibrate,
   };
 
   template <typename State>
-  class DashboardView final : public BaseView<State, DashboardViewModel, DashboardAction>
+  class DashboardView final : public BaseView<State, DashboardViewModel, DashboardViewAction>
   {
   public:
     using ViewModelFactory = DashboardViewModel (*)(const State &);
-    using ActionDispatcher = std::function<void(DashboardAction)>;
+    using ActionDispatcher = std::function<void(DashboardViewAction)>;
 
     DashboardView(
         ViewModelFactory makeViewModel,
         ActionDispatcher dispatch)
-        : BaseView<State, DashboardViewModel, DashboardAction>{makeViewModel, dispatch} {}
+        : BaseView<State, DashboardViewModel, DashboardViewAction>{makeViewModel, dispatch} {}
 
   private:
     void render(const DashboardViewModel &viewModel, AppHAL::Display &display) const override
     {
-      auto s1 = fmt::format(FMT_STRING("w={:8.3f}"), viewModel.weight);
+      auto s1 = fmt::format(FMT_STRING("w={:6.1f}"), viewModel.weight);
 
       display.clearBuffer();
       display.drawStr({0, 10}, s1);
@@ -55,11 +54,11 @@ namespace UI
       {
       case UI::ButtonEvent::ButtonTag::A:
         if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
-          dispatch(DashboardAction::Tare);
+          dispatch(DashboardViewAction::Tare);
         break;
       case UI::ButtonEvent::ButtonTag::B:
         if (buttonEvent.type == UI::ButtonEvent::Type::ButtonDown)
-          dispatch(DashboardAction::Calibrate);
+          dispatch(DashboardViewAction::Calibrate);
         break;
       }
     }

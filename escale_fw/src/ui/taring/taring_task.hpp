@@ -25,7 +25,7 @@ namespace UI
     };
 
   public:
-    using Tare = void (*)(std::uint8_t sampleCount);
+    using Tare = void (*)();
 
     TaringTask(Tare tare)
         : RunLoop::BaseTask<State, TaringTaskState>(
@@ -59,7 +59,7 @@ namespace UI
           break;
         }
         case Action::Tare:
-          tare(64);
+          tare();
           actions.push_back(Action::Terminate);
           break;
         }

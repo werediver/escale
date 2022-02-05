@@ -27,15 +27,17 @@ namespace UI
 
   public:
     using TaringTaskFactory = std::shared_ptr<TaringTask<State>> (*)();
+    using CalibrationTaskFactory = std::shared_ptr<CalibrationTask<State>> (*)();
     using ViewModelFactory = typename DashboardView<State>::ViewModelFactory;
 
     DashboardTask(
         TaringTaskFactory makeTaringTask,
+        CalibrationTaskFactory makeCalibrationTask,
         ViewModelFactory makeViewModel)
         : RunLoop::BaseTask<State, DashboardTaskState>{
               [](auto)
               { return Unit(); }},
-          makeTaringTask{makeTaringTask}, makeViewModel{makeViewModel} {}
+          makeTaringTask{makeTaringTask}, makeCalibrationTask{makeCalibrationTask}, makeViewModel{makeViewModel} {}
 
   private:
     void run(RunLoop::RunLoop<State> &runLoop, DashboardTaskState state) override
@@ -56,10 +58,10 @@ namespace UI
             (*pViewStack)
                 .push_back(std::make_shared<DashboardView<State>>(
                     makeViewModel,
-                    [weakSelf](DashboardAction action)
+                    [weakSelf](DashboardViewAction action)
                     {
                       if (auto self = weakSelf.lock())
-                        self->handleDashboardViewAction(action);
+                        self->handleViewAction(action);
                     }));
           }
           break;
@@ -68,25 +70,27 @@ namespace UI
           runLoop.push_back(makeTaringTask());
           break;
         case Action::Calibrate:
+          runLoop.push_back(makeCalibrationTask());
           break;
         }
       }
     }
 
-    void handleDashboardViewAction(DashboardAction action)
+    void handleViewAction(DashboardViewAction action)
     {
       switch (action)
       {
-      case DashboardAction::Tare:
+      case DashboardViewAction::Tare:
         actions.push_back(Action::Tare);
         break;
-      case DashboardAction::Calibrate:
+      case DashboardViewAction::Calibrate:
         actions.push_back(Action::Calibrate);
         break;
       }
     }
 
     TaringTaskFactory makeTaringTask;
+    CalibrationTaskFactory makeCalibrationTask;
     ViewModelFactory makeViewModel;
     std::deque<Action> actions{Action::Init};
   };
