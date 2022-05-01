@@ -1,0 +1,13 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"90-06062020-070677";"";
+"REFERENCE";"87833-1020";"";
+"TraceParts.PartTitle";"Milli-Grid 2.0mm Header rightangle 10way";"";
+"TraceParts.InstanceId";"90-06062020-0706772N3XX9WWY2MK673V115V3T3RA";"";
+"DESIGN";"Milli-Grid 2.0mm Header rightangle 10way";"";
+"TraceParts.PartStatus";"Published";"";
+"TraceParts.PartStatusId";"";"";
+"SUPPLIER";"Molex";"";
+"TraceParts.PartVersion";"1.0.0";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"TraceParts.PartLanguage";"en";"";
+"TraceParts.ClassPath";"MOLEX:90-06062020-070677";"";

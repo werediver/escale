@@ -1,0 +1,13 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"90-06062020-070670";"";
+"REFERENCE";"87833-0820";"";
+"TraceParts.PartTitle";"Milli-Grid 2mm right angle PCB header,8P";"";
+"TraceParts.InstanceId";"90-06062020-0706702N3XX9WWY2MK673V115V3T3RA";"";
+"DESIGN";"Milli-Grid 2mm right angle PCB header,8P";"";
+"TraceParts.PartStatus";"Published";"";
+"TraceParts.PartStatusId";"";"";
+"SUPPLIER";"Molex";"";
+"TraceParts.PartVersion";"1.0.0";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"TraceParts.PartLanguage";"en";"";
+"TraceParts.ClassPath";"MOLEX:90-06062020-070670";"";
