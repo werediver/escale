@@ -1,32 +1,70 @@
-use crate::{run_loop::*, AppContext, InputPin};
+use crate::{run_loop::*, AppContext};
 
 use alloc::boxed::Box;
 
 pub enum InputEvent {
-    PinA(bool),
+    ButtonADown,
+    ButtonBDown,
 }
 
 pub struct InputScanner {
-    pin_a_state: bool,
-    pin_a: Box<dyn InputPin>,
+    button_a: Button,
+    button_b: Button,
 }
 
 impl InputScanner {
-    pub fn new(pin_a: Box<dyn InputPin>) -> InputScanner {
+    pub fn new<'a, F1, F2>(get_is_button_a_down: F1, get_is_button_b_down: F2) -> InputScanner
+    where
+        F1: Fn() -> bool + 'static,
+        F2: Fn() -> bool + 'static,
+    {
         InputScanner {
-            pin_a_state: false,
-            pin_a,
+            button_a: Button::new(get_is_button_a_down),
+            button_b: Button::new(get_is_button_b_down),
         }
     }
 }
 
 impl Task<AppContext> for InputScanner {
     fn run(&mut self, cx: &mut AppContext) -> TaskStatus {
-        let pin_a_state_new = self.pin_a.is_low().ok().unwrap();
-        if pin_a_state_new != self.pin_a_state {
-            cx.mq.push(InputEvent::PinA(pin_a_state_new));
-            self.pin_a_state = pin_a_state_new;
-        }
+        self.button_a.refresh(|is_down| {
+            if is_down {
+                cx.mq.push(InputEvent::ButtonADown);
+            }
+        });
+        self.button_b.refresh(|is_down| {
+            if is_down {
+                cx.mq.push(InputEvent::ButtonBDown);
+            }
+        });
         TaskStatus::Pending
+    }
+}
+
+struct Button {
+    is_down: bool,
+    get_is_down: Box<dyn Fn() -> bool>,
+}
+
+impl Button {
+    fn new<F>(get_is_down: F) -> Button
+    where
+        F: Fn() -> bool + 'static,
+    {
+        Button {
+            is_down: get_is_down(),
+            get_is_down: Box::new(get_is_down),
+        }
+    }
+
+    fn refresh<F>(&mut self, on_change: F)
+    where
+        F: FnOnce(bool) -> (),
+    {
+        let new_is_down = (self.get_is_down)();
+        if self.is_down != new_is_down {
+            self.is_down = new_is_down;
+            on_change(new_is_down);
+        }
     }
 }

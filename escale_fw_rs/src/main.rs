@@ -8,10 +8,10 @@ mod run_loop;
 
 extern crate alloc;
 
-use alloc::boxed::Box;
 use alloc_cortex_m::CortexMHeap;
-use core::{alloc::Layout, convert::Infallible, fmt::Write};
+use core::{alloc::Layout, fmt::Write};
 use cortex_m_rt::entry;
+use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use panic_probe as _;
 
@@ -87,29 +87,35 @@ fn _main() -> ! {
     let mut display =
         Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode();
     display.init().unwrap();
+    display.clear().unwrap();
+    display.write_str("Ready");
 
     let mut cx = AppContext::default();
     let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
 
-    let pin_a: Pin<_, PullUpInput> = pins.gpio20.into_mode();
-    schedule.push(AppTask::InputScanner(InputScanner::new(Box::new(pin_a))));
+    let button_a_pin: Pin<_, PullUpInput> = pins.gpio20.into_mode();
+    let button_b_pin: Pin<_, PullUpInput> = pins.gpio26.into_mode();
+
+    schedule.push(AppTask::InputScanner(InputScanner::new(
+        move || button_a_pin.is_low().ok().unwrap(),
+        move || button_b_pin.is_low().ok().unwrap(),
+    )));
 
     loop {
         schedule.run(&mut cx);
         cx.mq.process(|e| match e {
-            InputEvent::PinA(pin_a_state) => {
+            InputEvent::ButtonADown => {
+                cx.state.weight += 1.0;
                 display.clear().unwrap();
                 display
-                    .write_fmt(format_args!("{} {}", cx.state.count, pin_a_state))
+                    .write_fmt(format_args!("{}", cx.state.weight))
                     .unwrap();
-                cx.state.count += 1;
                 MessageProcessingStatus::Processed
             }
+            InputEvent::ButtonBDown => MessageProcessingStatus::Processed,
         });
     }
 }
-
-trait InputPin = embedded_hal::digital::v2::InputPin<Error = Infallible>;
 
 #[derive(Default)]
 struct AppContext {
@@ -119,7 +125,7 @@ struct AppContext {
 
 #[derive(Default)]
 struct AppState {
-    count: u32,
+    weight: f32,
 }
 
 enum AppTask {
