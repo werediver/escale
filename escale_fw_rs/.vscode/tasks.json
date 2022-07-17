@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Cargo build",
+      "type": "shell",
+      "command": "cargo",
+      "args": [
+        "build"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "Build binary",
+      "type": "shell",
+      "command": "arm-none-eabi-objcopy",
+      "args": [
+        "--output-target",
+        "binary",
+        // Read from an ELF binary file
+        "./target/thumbv6m-none-eabi/debug/escale",
+        // Output a raw binary file
+        "./target/thumbv6m-none-eabi/debug/escale.bin"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": "Cargo build"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug escale",
+      "request": "launch",
+      "type": "cortex-debug",
+      "cwd": "${workspaceRoot}",
+      "executable": "${workspaceFolder}/target/thumbv6m-none-eabi/debug/escale",
+      "preLaunchTask": "Build binary",
+      "servertype": "openocd",
+      "configFiles": [
+        "interface/picoprobe.cfg",
+        "target/rp2040.cfg"
+      ],
+      "device": "RP2040",
+      "showDevDebugOutput": "raw",
+      "gdbPath": "arm-none-eabi-gdb",
+      "gdbTarget": "localhost:3333",
+      "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+      "runToEntryPoint": "main",
+      "preLaunchCommands": [
+        "monitor init",
+        "monitor reset init",
+        "monitor halt"
+      ],
+      "postRestartCommands": [
+        "break main",
+        "continue"
+      ],
+    }
+  ]
+}
