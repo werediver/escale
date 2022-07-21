@@ -1,6 +1,16 @@
 # Kitchen / coffee scale
 
-This is a kitchen / coffee scale project repository. Eventually it should contain both hardware design files and firmware source code.
+This is a kitchen / coffee scale project repository. Contains both the hardware design files and the firmware source code.
+
+## Prototype one
+
+- [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/)
+- Firmware in Rust ([escale_fw_rs](escale_fw_rs/))
+- Battery powered (AA×2)
+
+![eScale prototype one](images/escale_prototype_one_1.jpeg)
+
+## Prototype zero
 
 The firmware source code is at a very early stage of development. See [escale_fw](escale_fw).
 
