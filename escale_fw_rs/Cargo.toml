@@ -11,8 +11,8 @@ cortex-m-rt = "0.7.0"
 embedded-hal = { version = "0.2.5", features = ["unproven"] }
 embedded-time = "0.12.0"
 alloc-cortex-m = "0.4.2"
-
 panic-probe = "0.3.0"
+fugit = "0.3.6"
 
 # Board Support Package
 rp-pico = "0.4.1"

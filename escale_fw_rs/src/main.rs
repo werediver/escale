@@ -3,17 +3,23 @@
 #![feature(alloc_error_handler)]
 #![feature(trait_alias)]
 
+mod common;
+mod dashboard;
 mod input_scanner;
 mod run_loop;
+mod uptime;
 
 extern crate alloc;
 
+use alloc::rc::Rc;
 use alloc_cortex_m::CortexMHeap;
-use core::{alloc::Layout, fmt::Write};
+use core::{alloc::Layout, cell::RefCell};
 use cortex_m_rt::entry;
+use dashboard::Dashboard;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use panic_probe as _;
+use uptime::Uptime;
 
 use rp_pico as bsp;
 
@@ -25,7 +31,11 @@ use bsp::hal::{
     Watchdog, I2C,
 };
 
-use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
+use ssd1306::{
+    mode::{TerminalDisplaySize, TerminalMode},
+    prelude::{WriteOnlyDataCommand, *},
+    I2CDisplayInterface, Ssd1306,
+};
 
 use crate::{input_scanner::*, run_loop::*};
 
@@ -50,6 +60,9 @@ fn _main() -> ! {
 
     let mut pac = pac::Peripherals::take().unwrap();
     let sio = Sio::new(pac.SIO);
+
+    let core = pac::CorePeripherals::take().unwrap();
+    let mut _uptime = Uptime::new(core.SYST);
 
     let pins = bsp::Pins::new(
         pac.IO_BANK0,
@@ -84,11 +97,14 @@ fn _main() -> ! {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let mut display =
-        Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode();
-    display.init().unwrap();
-    display.clear().unwrap();
-    display.write_str("Ready");
+    let shared_terminal = Rc::new(RefCell::new(
+        Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode(),
+    ));
+    {
+        let mut terminal = shared_terminal.borrow_mut();
+        terminal.init().unwrap();
+        terminal.clear().unwrap();
+    }
 
     let mut cx = AppContext::default();
     let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
@@ -101,19 +117,11 @@ fn _main() -> ! {
         move || button_b_pin.is_low().ok().unwrap(),
     )));
 
+    let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
+    schedule.push(AppTask::Dashboard(dashboard));
+
     loop {
         schedule.run(&mut cx);
-        cx.mq.process(|e| match e {
-            InputEvent::ButtonADown => {
-                cx.state.weight += 1.0;
-                display.clear().unwrap();
-                display
-                    .write_fmt(format_args!("{}", cx.state.weight))
-                    .unwrap();
-                MessageProcessingStatus::Processed
-            }
-            InputEvent::ButtonBDown => MessageProcessingStatus::Processed,
-        });
     }
 }
 
@@ -130,12 +138,33 @@ struct AppState {
 
 enum AppTask {
     InputScanner(InputScanner),
+    Dashboard(Dashboard),
 }
 
 impl<'a> AsMut<dyn Task<AppContext> + 'a> for AppTask {
     fn as_mut(&mut self) -> &mut (dyn Task<AppContext> + 'a) {
         match self {
             AppTask::InputScanner(input_scanner) => input_scanner,
+            AppTask::Dashboard(dashboard) => dashboard,
         }
+    }
+}
+
+pub trait Terminal: core::fmt::Write {
+    fn clear(&mut self) -> core::fmt::Result;
+    fn set_position(&mut self, column: u8, row: u8) -> core::fmt::Result;
+}
+
+impl<DI, SIZE> Terminal for Ssd1306<DI, SIZE, TerminalMode>
+where
+    DI: WriteOnlyDataCommand,
+    SIZE: TerminalDisplaySize,
+{
+    fn clear(&mut self) -> core::fmt::Result {
+        self.clear().map_err(|_| core::fmt::Error)
+    }
+
+    fn set_position(&mut self, column: u8, row: u8) -> core::fmt::Result {
+        self.set_position(column, row).map_err(|_| core::fmt::Error)
     }
 }
