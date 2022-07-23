@@ -27,7 +27,7 @@ impl Dashboard {
     fn render(&mut self, cx: &mut AppContext) -> core::fmt::Result {
         let mut terminal = self.terminal.borrow_mut();
         terminal.set_position(0, 0)?;
-        terminal.write_fmt(format_args!("\nWEIGHT: {}\n", cx.state.weight))?;
+        terminal.write_fmt(format_args!("\nWEIGHT: {:<8}\n", cx.state.weight))?;
         terminal.write_fmt(format_args!(
             "\n  TIME:{}\n",
             Self::format_duration(

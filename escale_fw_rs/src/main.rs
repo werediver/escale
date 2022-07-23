@@ -8,6 +8,7 @@ mod dashboard;
 mod input_scanner;
 mod run_loop;
 mod uptime;
+mod uptime_delay;
 
 extern crate alloc;
 
@@ -28,9 +29,10 @@ use bsp::hal::{
     gpio::{Pin, PullUpInput},
     pac,
     sio::Sio,
-    Watchdog, I2C,
+    Clock, Watchdog, I2C,
 };
 
+use nau7802::{Gain, Ldo, Nau7802, SamplesPerSecond};
 use ssd1306::{
     mode::{TerminalDisplaySize, TerminalMode},
     prelude::{WriteOnlyDataCommand, *},
@@ -62,7 +64,7 @@ fn _main() -> ! {
     let sio = Sio::new(pac.SIO);
 
     let core = pac::CorePeripherals::take().unwrap();
-    let mut _uptime = Uptime::new(core.SYST);
+    let mut uptime = Uptime::new(core.SYST);
 
     let pins = bsp::Pins::new(
         pac.IO_BANK0,
@@ -93,7 +95,7 @@ fn _main() -> ! {
         pins.gpio17.into_mode(),
         400.kHz(),
         &mut pac.RESETS,
-        clocks.system_clock,
+        clocks.system_clock.freq(),
     );
 
     let interface = I2CDisplayInterface::new(i2c);
@@ -105,6 +107,23 @@ fn _main() -> ! {
         terminal.init().unwrap();
         terminal.clear().unwrap();
     }
+
+    let i2c1 = I2C::i2c1(
+        pac.I2C1,
+        pins.gpio2.into_mode(),
+        pins.gpio3.into_mode(),
+        400.kHz(),
+        &mut pac.RESETS,
+        clocks.system_clock.freq(),
+    );
+    let mut nau7802 = Nau7802::new_with_settings(
+        i2c1,
+        Ldo::L3v0,
+        Gain::G128,
+        SamplesPerSecond::SPS10,
+        &mut uptime,
+    )
+    .unwrap();
 
     let mut cx = AppContext::default();
     let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
@@ -122,6 +141,9 @@ fn _main() -> ! {
 
     loop {
         schedule.run(&mut cx);
+        if nau7802.data_available().unwrap() {
+            cx.state.weight = (nau7802.read_unchecked().unwrap()) as f32;
+        }
     }
 }
 

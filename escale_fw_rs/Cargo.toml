@@ -23,6 +23,7 @@ rp-pico = "0.4.1"
 # rp2040-boot2 = "0.2.0"
 
 ssd1306 = "0.7.0"
+nau7802 = { git = "https://github.com/werediver/nau7802-rs.git", branch = "next" }
 
 # cargo build/run
 [profile.dev]
