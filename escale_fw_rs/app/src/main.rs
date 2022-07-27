@@ -20,6 +20,7 @@ use dashboard::Dashboard;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use panic_probe as _;
+use stuff::{ring::Ring, signal::mean};
 use uptime::Uptime;
 
 use rp_pico as bsp;
@@ -120,7 +121,7 @@ fn _main() -> ! {
         i2c1,
         Ldo::L3v0,
         Gain::G128,
-        SamplesPerSecond::SPS10,
+        SamplesPerSecond::SPS20,
         &mut uptime,
     )
     .unwrap();
@@ -139,10 +140,23 @@ fn _main() -> ! {
     let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
     schedule.push(AppTask::Dashboard(dashboard));
 
+    let mut ring = Ring::new([0i32; 20]);
+    let mut w_ref = 0i32;
+    let mut w_ref_count = 20;
+
     loop {
         schedule.run(&mut cx);
+
+        // This is a sketch. It should be a task in the future.
         if nau7802.data_available().unwrap() {
-            cx.state.weight = (nau7802.read_unchecked().unwrap()) as f32;
+            let w = nau7802.read_unchecked().unwrap();
+            if w_ref_count > 0 {
+                w_ref = w;
+                w_ref_count -= 1;
+            } else {
+                ring.push(w - w_ref);
+                cx.state.weight = mean(&ring.data).expect("the ring must not be zero-length");
+            }
         }
     }
 }
@@ -152,6 +166,10 @@ struct AppContext {
     mq: MessageQueue<InputEvent>,
     state: AppState,
 }
+
+// enum AppMessage {
+//     InputEvent(InputEvent),
+// }
 
 #[derive(Default)]
 struct AppState {

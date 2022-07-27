@@ -8,6 +8,9 @@
       "args": [
         "build"
       ],
+      "options": {
+        "cwd": "app"
+      },
       "problemMatcher": [
         "$rustc"
       ],

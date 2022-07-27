@@ -1,0 +1,30 @@
+[package]
+name = "escale"
+version = "0.1.0"
+authors = ["Raman Fedaseyeu <raman.fedaseyeu@gmail.com>"]
+readme = "README.md"
+edition = "2021"
+
+[dependencies]
+cortex-m = "0.7.3"
+cortex-m-rt = "0.7.0"
+embedded-hal = { version = "0.2.5", features = ["unproven"] }
+embedded-time = "0.12.0"
+# linked_list_allocator = { version = "0.10.1", default-features = false, features = ["const_mut_refs"]}
+alloc-cortex-m = "0.4.2"
+panic-probe = "0.3.0"
+# rtt-target = { version = "0.3.1", features = ["cortex-m"] }
+fugit = "0.3.6"
+
+# Board Support Package
+rp-pico = "0.4.1"
+# sparkfun-pro-micro-rp2040 = "0.2.0"
+
+# When not using a BSP, use these
+# rp2040-hal = { version="0.4.0", features=["rt"] }
+# rp2040-boot2 = "0.2.0"
+
+ssd1306 = "0.7.0"
+nau7802 = { git = "https://github.com/werediver/nau7802-rs.git", branch = "next" }
+
+stuff = { path = "../lib/stuff" }
