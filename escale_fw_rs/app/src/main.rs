@@ -140,7 +140,7 @@ fn _main() -> ! {
     let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
     schedule.push(AppTask::Dashboard(dashboard));
 
-    let mut ring = Ring::new([0i32; 20]);
+    let mut ring = Ring::<i32, 20>::default();
     let mut w_ref = 0i32;
     let mut w_ref_count = 20;
 

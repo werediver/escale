@@ -1,24 +1,47 @@
 use core::iter::Chain;
 
+#[derive(Debug)]
 pub struct Ring<T, const N: usize> {
     pub data: [T; N],
     end: usize,
+    is_filled: bool,
 }
 
 impl<T: Copy + Default, const N: usize> Default for Ring<T, N> {
     fn default() -> Self {
-        Self::new([T::default(); N])
+        Self {
+            data: [T::default(); N],
+            end: 0,
+            is_filled: false,
+        }
     }
 }
 
 impl<T, const N: usize> Ring<T, N> {
-    pub fn new(data: [T; N]) -> Self {
-        Self { data, end: 0 }
+    pub fn is_filled(&self) -> bool {
+        self.is_filled
+    }
+
+    pub fn reset(&mut self, value: T)
+    where
+        T: Clone,
+    {
+        self.data.fill(value);
+        self.is_filled = false;
+    }
+
+    #[inline]
+    fn advance_end(&mut self) {
+        let new_end = self.end.wrapping_add(1) % N;
+        if !self.is_filled && new_end <= self.end {
+            self.is_filled = true;
+        }
+        self.end = new_end;
     }
 
     pub fn push(&mut self, value: T) {
         self.data[self.end] = value;
-        self.end = self.end.wrapping_add(1) % N;
+        self.advance_end();
     }
 
     pub fn iter(
@@ -67,14 +90,40 @@ mod tests {
     }
 
     #[test]
-    fn new_works() {
-        let ring = Ring::new([1, 2, 3]);
-        assert_eq!(ring.data, [1, 2, 3]);
+    fn new_ring_is_not_filled() {
+        assert_eq!(Ring::<i32, 3>::default().is_filled(), false);
+    }
+
+    #[test]
+    fn underfilled_ring_is_not_filled() {
+        let mut ring = Ring::<i32, 3>::default();
+        ring.push(1);
+        ring.push(2);
+        assert_eq!(ring.is_filled(), false);
+    }
+
+    #[test]
+    fn filled_ring_is_filled() {
+        let mut ring = Ring::<i32, 3>::default();
+        ring.push(1);
+        ring.push(2);
+        ring.push(3);
+        assert_eq!(ring.is_filled(), true);
+    }
+
+    #[test]
+    fn overfilled_ring_is_filled() {
+        let mut ring = Ring::<i32, 3>::default();
+        ring.push(1);
+        ring.push(2);
+        ring.push(3);
+        ring.push(4);
+        assert_eq!(ring.is_filled(), true);
     }
 
     #[test]
     fn iter_works() {
-        let mut ring = Ring::new([1, 2, 3]);
+        let mut ring = Ring::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -84,16 +133,20 @@ mod tests {
 
     #[test]
     fn iter_mut_works() {
-        let mut ring = Ring::new([1, 2, 3]);
+        let mut ring = Ring::<i32, 3>::default();
+        ring.push(4);
+        ring.push(5);
+        ring.push(6);
+        ring.push(7);
         for x in ring.iter_mut() {
             *x += 1;
         }
-        assert!(ring.iter_mut().eq([2, 3, 4].iter()));
+        assert!(ring.iter_mut().eq([6, 7, 8].iter()));
     }
 
     #[test]
     fn into_iter_works() {
-        let mut ring = Ring::new([1, 2, 3]);
+        let mut ring = Ring::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -107,10 +160,15 @@ mod tests {
 
     #[test]
     fn into_iter_mut_works() {
-        let mut ring = Ring::new([1, 2, 3]);
+        let mut ring = Ring::<i32, 3>::default();
+        ring.push(4);
+        ring.push(5);
+        ring.push(6);
+        ring.push(7);
         for x in &mut ring {
             *x += 1;
         }
-        assert!(ring.iter_mut().eq([2, 3, 4].iter()));
+        dbg!(&ring);
+        assert!(ring.iter_mut().eq([6, 7, 8].iter()));
     }
 }
