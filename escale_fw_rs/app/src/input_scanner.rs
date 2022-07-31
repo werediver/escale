@@ -1,4 +1,4 @@
-use crate::{run_loop::*, AppContext};
+use crate::{run_loop::*, AppContext, AppMessage};
 
 use alloc::boxed::Box;
 
@@ -29,12 +29,12 @@ impl Task<AppContext> for InputScanner {
     fn run(&mut self, cx: &mut AppContext) -> TaskStatus {
         self.button_a.refresh(|is_down| {
             if is_down {
-                cx.mq.push(InputEvent::ButtonADown);
+                cx.mq.push(AppMessage::InputEvent(InputEvent::ButtonADown));
             }
         });
         self.button_b.refresh(|is_down| {
             if is_down {
-                cx.mq.push(InputEvent::ButtonBDown);
+                cx.mq.push(AppMessage::InputEvent(InputEvent::ButtonBDown));
             }
         });
         TaskStatus::Pending

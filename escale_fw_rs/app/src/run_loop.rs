@@ -60,34 +60,3 @@ where
         }
     }
 }
-
-pub struct MessageQueue<M> {
-    msgs: Vec<M>,
-}
-
-pub enum MessageProcessingStatus {
-    Ignored,
-    Processed,
-}
-
-impl<M> Default for MessageQueue<M> {
-    fn default() -> Self {
-        MessageQueue { msgs: Vec::new() }
-    }
-}
-
-impl<M> MessageQueue<M> {
-    pub fn push(&mut self, msg: M) {
-        self.msgs.push(msg);
-    }
-
-    pub fn process<F>(&mut self, mut f: F)
-    where
-        F: FnMut(&M) -> MessageProcessingStatus,
-    {
-        self.msgs.retain(|msg| match f(msg) {
-            MessageProcessingStatus::Ignored => true,
-            MessageProcessingStatus::Processed => false,
-        });
-    }
-}

@@ -1,12 +1,13 @@
 use core::cell::RefCell;
 
 use alloc::{format, rc::Rc, string::String};
+use stuff::mq::MessageProcessingStatus;
 
 use crate::{
     common::{Duration, Instant},
     input_scanner::InputEvent,
-    run_loop::{MessageProcessingStatus, Task, TaskStatus},
-    AppContext, Terminal,
+    run_loop::{Task, TaskStatus},
+    AppContext, AppMessage, Terminal,
 };
 
 pub struct Dashboard {
@@ -24,10 +25,40 @@ impl Dashboard {
         }
     }
 
+    fn handle_input(
+        &mut self,
+        e: &AppMessage,
+        push: &mut dyn FnMut(AppMessage) -> (),
+    ) -> MessageProcessingStatus {
+        if let AppMessage::InputEvent(e) = e {
+            match e {
+                InputEvent::ButtonADown => {
+                    // Tare
+                    push(AppMessage::Tare);
+                    MessageProcessingStatus::Processed
+                }
+                InputEvent::ButtonBDown => {
+                    // Calibrate
+                    push(AppMessage::Calibrate);
+
+                    // Start or stop the stopwatch
+                    // if let Some(stopwatch) = self.stopwatch.as_mut() && stopwatch.is_running() {
+                    //     stopwatch.stop();
+                    // } else {
+                    //     self.stopwatch = Some(Stopwatch::new(self.get_instant));
+                    // }
+                    MessageProcessingStatus::Processed
+                }
+            }
+        } else {
+            MessageProcessingStatus::Ignored
+        }
+    }
+
     fn render(&mut self, cx: &mut AppContext) -> core::fmt::Result {
         let mut terminal = self.terminal.borrow_mut();
         terminal.set_position(0, 0)?;
-        terminal.write_fmt(format_args!("\nWEIGHT: {:<8}\n", cx.state.weight))?;
+        terminal.write_fmt(format_args!("\nWEIGHT: {:<8.2}\n", cx.state.weight))?;
         terminal.write_fmt(format_args!(
             "\n  TIME:{}\n",
             Self::format_duration(
@@ -46,30 +77,12 @@ impl Dashboard {
             d.to_millis() % 1000 / 10
         )
     }
-
-    fn handle_input(&mut self, e: &InputEvent) -> MessageProcessingStatus {
-        match e {
-            InputEvent::ButtonADown => {
-                // Tare
-                MessageProcessingStatus::Processed
-            }
-            InputEvent::ButtonBDown => {
-                // Start or stop the stopwatch
-                if let Some(stopwatch) = self.stopwatch.as_mut() && stopwatch.is_running() {
-                    stopwatch.stop();
-                } else {
-                    self.stopwatch = Some(Stopwatch::new(self.get_instant));
-                }
-                MessageProcessingStatus::Processed
-            }
-        }
-    }
 }
 
 impl Task<AppContext> for Dashboard {
     fn run(&mut self, cx: &mut AppContext) -> TaskStatus {
+        cx.mq.process(|m, push| self.handle_input(m, push));
         self.render(cx).unwrap();
-        cx.mq.process(|m| self.handle_input(m));
         TaskStatus::Pending
     }
 }

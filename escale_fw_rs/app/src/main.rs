@@ -20,7 +20,10 @@ use dashboard::Dashboard;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use panic_probe as _;
-use stuff::{ring::Ring, signal::mean};
+use stuff::{
+    mq::{MessageProcessingStatus, MessageQueue},
+    scale::Scale,
+};
 use uptime::Uptime;
 
 use rp_pico as bsp;
@@ -140,22 +143,28 @@ fn _main() -> ! {
     let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
     schedule.push(AppTask::Dashboard(dashboard));
 
-    let mut ring = Ring::<i32, 20>::default();
-    let mut w_ref = 0i32;
-    let mut w_ref_count = 20;
+    let mut scale = Scale::<i32, f32, 20>::default();
 
     loop {
         schedule.run(&mut cx);
 
         // This is a sketch. It should be a task in the future.
         if nau7802.data_available().unwrap() {
-            let w = nau7802.read_unchecked().unwrap();
-            if w_ref_count > 0 {
-                w_ref = w;
-                w_ref_count -= 1;
-            } else {
-                ring.push(w - w_ref);
-                cx.state.weight = mean(&ring.data).expect("the ring must not be zero-length");
+            let raw = nau7802.read_unchecked().unwrap();
+            scale.push(raw);
+            if scale.is_filled() {
+                cx.mq.process(|m, _push| match m {
+                    AppMessage::Tare => {
+                        scale.set_tare().unwrap();
+                        MessageProcessingStatus::Processed
+                    }
+                    AppMessage::Calibrate => {
+                        scale.set_unit(100.0).unwrap();
+                        MessageProcessingStatus::Processed
+                    }
+                    _ => MessageProcessingStatus::Ignored,
+                });
+                cx.state.weight = scale.read().unwrap();
             }
         }
     }
@@ -163,13 +172,15 @@ fn _main() -> ! {
 
 #[derive(Default)]
 struct AppContext {
-    mq: MessageQueue<InputEvent>,
+    mq: MessageQueue<AppMessage>,
     state: AppState,
 }
 
-// enum AppMessage {
-//     InputEvent(InputEvent),
-// }
+enum AppMessage {
+    InputEvent(InputEvent),
+    Tare,
+    Calibrate,
+}
 
 #[derive(Default)]
 struct AppState {
