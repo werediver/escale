@@ -1,13 +1,13 @@
+use alloc::{format, rc::Rc, string::String};
 use core::cell::RefCell;
 
-use alloc::{format, rc::Rc, string::String};
-use stuff::mq::MessageProcessingStatus;
-
-use crate::{
-    common::{Duration, Instant},
-    input_scanner::InputEvent,
+use app_core::{
+    common::{AppContext, AppMessage, Duration, InputEvent, Instant},
+    terminal::Terminal,
+};
+use stuff::{
+    mq::MessageProcessingStatus,
     run_loop::{Task, TaskStatus},
-    AppContext, AppMessage, Terminal,
 };
 
 pub struct Dashboard {

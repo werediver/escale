@@ -3,10 +3,8 @@
 #![feature(alloc_error_handler)]
 #![feature(trait_alias)]
 
-mod common;
 mod dashboard;
-mod input_scanner;
-mod run_loop;
+mod ssd1306_terminal;
 mod uptime;
 mod uptime_delay;
 
@@ -16,15 +14,9 @@ use alloc::rc::Rc;
 use alloc_cortex_m::CortexMHeap;
 use core::{alloc::Layout, cell::RefCell};
 use cortex_m_rt::entry;
-use dashboard::Dashboard;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use panic_probe as _;
-use stuff::{
-    mq::{MessageProcessingStatus, MessageQueue},
-    scale::Scale,
-};
-use uptime::Uptime;
 
 use rp_pico as bsp;
 
@@ -38,12 +30,23 @@ use bsp::hal::{
 
 use nau7802::{Gain, Ldo, Nau7802, SamplesPerSecond};
 use ssd1306::{
-    mode::{TerminalDisplaySize, TerminalMode},
-    prelude::{WriteOnlyDataCommand, *},
-    I2CDisplayInterface, Ssd1306,
+    mode::DisplayConfig, rotation::DisplayRotation, size::DisplaySize128x64, I2CDisplayInterface,
+    Ssd1306,
 };
 
-use crate::{input_scanner::*, run_loop::*};
+use app_core::{
+    common::{AppContext, AppMessage},
+    input_scanner::InputScanner,
+    scale::Scale,
+    terminal::Terminal,
+};
+use dashboard::Dashboard;
+use ssd1306_terminal::Ssd1306Terminal;
+use stuff::{
+    mq::MessageProcessingStatus,
+    run_loop::{Schedule, Task},
+};
+use uptime::Uptime;
 
 #[alloc_error_handler]
 fn oom(_: Layout) -> ! {
@@ -103,12 +106,12 @@ fn _main() -> ! {
     );
 
     let interface = I2CDisplayInterface::new(i2c);
-    let shared_terminal = Rc::new(RefCell::new(
-        Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode(),
-    ));
+    let mut ssd1306 =
+        Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode();
+    ssd1306.init().unwrap();
+    let shared_terminal = Rc::new(RefCell::new(Ssd1306Terminal::new(ssd1306)));
     {
         let mut terminal = shared_terminal.borrow_mut();
-        terminal.init().unwrap();
         terminal.clear().unwrap();
     }
 
@@ -170,23 +173,6 @@ fn _main() -> ! {
     }
 }
 
-#[derive(Default)]
-struct AppContext {
-    mq: MessageQueue<AppMessage>,
-    state: AppState,
-}
-
-enum AppMessage {
-    InputEvent(InputEvent),
-    Tare,
-    Calibrate,
-}
-
-#[derive(Default)]
-struct AppState {
-    weight: f32,
-}
-
 enum AppTask {
     InputScanner(InputScanner),
     Dashboard(Dashboard),
@@ -198,24 +184,5 @@ impl<'a> AsMut<dyn Task<AppContext> + 'a> for AppTask {
             AppTask::InputScanner(input_scanner) => input_scanner,
             AppTask::Dashboard(dashboard) => dashboard,
         }
-    }
-}
-
-pub trait Terminal: core::fmt::Write {
-    fn clear(&mut self) -> core::fmt::Result;
-    fn set_position(&mut self, column: u8, row: u8) -> core::fmt::Result;
-}
-
-impl<DI, SIZE> Terminal for Ssd1306<DI, SIZE, TerminalMode>
-where
-    DI: WriteOnlyDataCommand,
-    SIZE: TerminalDisplaySize,
-{
-    fn clear(&mut self) -> core::fmt::Result {
-        self.clear().map_err(|_| core::fmt::Error)
-    }
-
-    fn set_position(&mut self, column: u8, row: u8) -> core::fmt::Result {
-        self.set_position(column, row).map_err(|_| core::fmt::Error)
     }
 }

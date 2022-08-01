@@ -1,10 +1,22 @@
 # eScale firmware in Rust
 
+## Project structure
+
+- [app](./app/)
+  - The main crate
+- [lib/](./lib/)
+  - [app-core](./lib/app-core/)
+    - Application logic, hardware independent
+  - [stuff](./lib/stuff/)
+    - Auxiliary code, potentially reusable outside the app
+    - Yes, the name can be improved
+
 ## UI structure
 
 - Dashboard (weigh & time)
   - Taring
-  - Calibrating
+  - Calibration
+  - (Maybe) Diagnostic info
 
 ## General architecture and execution model
 
@@ -12,14 +24,17 @@
 - A task may need to initialize, can be ran, can terminate when done, can schedule other tasks
 - Services
   - A task as a service can be discovered, can provide service-specific interface
+
     OR
   - A task can register (as) a service
   - A service can be resolved by other tasks
     (i.e. the service registry is separate from the task registry)
+
     OR
   - A message queue accessible to tasks instead?
     - (Weird, but) a service can be published via a message in the queue that is
       - never removed (a "pinned" message)
+
         OR
       - regularly re-posted
 
@@ -39,6 +54,7 @@
 
 - Display API
   - A display interface is injected into a task as a dependency
+
     OR
   - A display interface is published as a "pinned" message in the message queue
     - The display service doesn't have to be a task

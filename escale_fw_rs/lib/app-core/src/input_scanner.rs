@@ -1,11 +1,8 @@
-use crate::{run_loop::*, AppContext, AppMessage};
-
 use alloc::boxed::Box;
 
-pub enum InputEvent {
-    ButtonADown,
-    ButtonBDown,
-}
+use stuff::run_loop::{Task, TaskStatus};
+
+use crate::common::{AppContext, AppMessage, InputEvent};
 
 pub struct InputScanner {
     button_a: Button,

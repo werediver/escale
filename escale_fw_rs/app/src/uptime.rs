@@ -1,6 +1,7 @@
-use crate::common::Instant;
 use cortex_m::peripheral::{syst::SystClkSource, SYST};
 use cortex_m_rt::exception;
+
+use app_core::common::Instant;
 
 pub struct Uptime {
     _syst: SYST,

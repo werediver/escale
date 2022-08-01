@@ -1,5 +1,3 @@
-extern crate alloc;
-
 use alloc::vec::Vec;
 
 pub struct MessageQueue<M> {

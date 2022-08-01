@@ -1,13 +1,20 @@
 use core::iter::Chain;
 
 #[derive(Debug)]
-pub struct Ring<T, const N: usize> {
+pub struct Ring<T, const N: usize>
+where
+    // Require N ≥ 1
+    [(); N - 1]:,
+{
     pub data: [T; N],
     end: usize,
     is_filled: bool,
 }
 
-impl<T: Copy + Default, const N: usize> Default for Ring<T, N> {
+impl<T: Copy + Default, const N: usize> Default for Ring<T, N>
+where
+    [(); N - 1]:,
+{
     fn default() -> Self {
         Self {
             data: [T::default(); N],
@@ -17,7 +24,10 @@ impl<T: Copy + Default, const N: usize> Default for Ring<T, N> {
     }
 }
 
-impl<T, const N: usize> Ring<T, N> {
+impl<T, const N: usize> Ring<T, N>
+where
+    [(); N - 1]:,
+{
     pub fn is_filled(&self) -> bool {
         self.is_filled
     }
@@ -60,7 +70,10 @@ impl<T, const N: usize> Ring<T, N> {
     }
 }
 
-impl<'a, T, const N: usize> IntoIterator for &'a Ring<T, N> {
+impl<'a, T, const N: usize> IntoIterator for &'a Ring<T, N>
+where
+    [(); N - 1]:,
+{
     type Item = &'a T;
     type IntoIter = Chain<<&'a [T] as IntoIterator>::IntoIter, <&'a [T] as IntoIterator>::IntoIter>;
 
@@ -69,7 +82,10 @@ impl<'a, T, const N: usize> IntoIterator for &'a Ring<T, N> {
     }
 }
 
-impl<'a, T, const N: usize> IntoIterator for &'a mut Ring<T, N> {
+impl<'a, T, const N: usize> IntoIterator for &'a mut Ring<T, N>
+where
+    [(); N - 1]:,
+{
     type Item = &'a mut T;
     type IntoIter =
         Chain<<&'a mut [T] as IntoIterator>::IntoIter, <&'a mut [T] as IntoIterator>::IntoIter>;

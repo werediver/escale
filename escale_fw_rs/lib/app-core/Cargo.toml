@@ -1,0 +1,9 @@
+[package]
+name = "app-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stuff = { path = "../stuff" }
+num-traits = { version = "0.2.15", default-features = false }
+fugit = "0.3.6"

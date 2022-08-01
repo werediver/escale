@@ -1,8 +1,5 @@
-use core::marker::PhantomData;
-
-extern crate alloc;
-
 use alloc::vec::Vec;
+use core::marker::PhantomData;
 
 pub trait Task<Context> {
     fn run(&mut self, cx: &mut Context) -> TaskStatus;

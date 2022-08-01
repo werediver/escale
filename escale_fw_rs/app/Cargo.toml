@@ -27,4 +27,5 @@ rp-pico = "0.4.1"
 ssd1306 = "0.7.0"
 nau7802 = { git = "https://github.com/werediver/nau7802-rs.git", branch = "next" }
 
+app-core = { path = "../lib/app-core" }
 stuff = { path = "../lib/stuff" }

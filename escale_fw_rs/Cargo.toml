@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "app",
+  "lib/app-core",
   "lib/stuff"
 ]
 

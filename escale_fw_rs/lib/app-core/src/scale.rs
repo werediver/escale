@@ -1,14 +1,20 @@
 use num_traits::{float::FloatCore, PrimInt};
+use stuff::{ring::Ring, signal::mean};
 
-use crate::{ring::Ring, signal::mean};
-
-pub struct Scale<T: PrimInt, U: FloatCore, const N: usize> {
+pub struct Scale<T: PrimInt, U: FloatCore, const N: usize>
+where
+    // Require N ≥ 1
+    [(); N - 1]:,
+{
     ring: Ring<T, N>,
     tare: U,
     unit: U,
 }
 
-impl<T: PrimInt + Default, U: FloatCore, const N: usize> Default for Scale<T, U, N> {
+impl<T: PrimInt + Default, U: FloatCore, const N: usize> Default for Scale<T, U, N>
+where
+    [(); N - 1]:,
+{
     fn default() -> Self {
         Self {
             ring: Default::default(),
@@ -18,7 +24,10 @@ impl<T: PrimInt + Default, U: FloatCore, const N: usize> Default for Scale<T, U,
     }
 }
 
-impl<T: PrimInt, U: FloatCore, const N: usize> Scale<T, U, N> {
+impl<T: PrimInt, U: FloatCore, const N: usize> Scale<T, U, N>
+where
+    [(); N - 1]:,
+{
     pub fn push(&mut self, value: T) {
         self.ring.push(value);
     }

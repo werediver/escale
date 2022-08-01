@@ -4,7 +4,7 @@
 
 extern crate alloc;
 
-pub mod mq;
-pub mod ring;
-pub mod run_loop;
-pub mod signal;
+pub mod common;
+pub mod input_scanner;
+pub mod scale;
+pub mod terminal;
