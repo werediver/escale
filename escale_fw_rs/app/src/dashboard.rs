@@ -1,7 +1,9 @@
 use alloc::{format, rc::Rc, string::String};
 use core::cell::RefCell;
+use libm::fabsf;
 
 use app_core::{
+    button::ButtonEvent,
     common::{AppContext, AppMessage, Duration, InputEvent, Instant},
     terminal::Terminal,
 };
@@ -32,23 +34,24 @@ impl Dashboard {
     ) -> MessageProcessingStatus {
         if let AppMessage::InputEvent(e) = e {
             match e {
-                InputEvent::ButtonADown => {
-                    // Tare
-                    push(AppMessage::Tare);
+                InputEvent::ButtonA(e) => {
+                    match e {
+                        ButtonEvent::Press => push(AppMessage::Tare),
+                        ButtonEvent::LongPress => push(AppMessage::Calibrate),
+                    }
                     MessageProcessingStatus::Processed
                 }
-                InputEvent::ButtonBDown => {
-                    // Calibrate
-                    push(AppMessage::Calibrate);
-
-                    // Start or stop the stopwatch
-                    // if let Some(stopwatch) = self.stopwatch.as_mut() && stopwatch.is_running() {
-                    //     stopwatch.stop();
-                    // } else {
-                    //     self.stopwatch = Some(Stopwatch::new(self.get_instant));
-                    // }
-                    MessageProcessingStatus::Processed
-                }
+                InputEvent::ButtonB(e) => match e {
+                    ButtonEvent::Press => {
+                        if let Some(stopwatch) = self.stopwatch.as_mut() && stopwatch.is_running() {
+                            stopwatch.stop();
+                        } else {
+                            self.stopwatch = Some(Stopwatch::new(self.get_instant));
+                        }
+                        MessageProcessingStatus::Processed
+                    }
+                    ButtonEvent::LongPress => MessageProcessingStatus::Ignored,
+                },
             }
         } else {
             MessageProcessingStatus::Ignored
@@ -58,7 +61,10 @@ impl Dashboard {
     fn render(&mut self, cx: &mut AppContext) -> core::fmt::Result {
         let mut terminal = self.terminal.borrow_mut();
         terminal.set_position(0, 0)?;
-        terminal.write_fmt(format_args!("\nWEIGHT: {:<8.2}\n", cx.state.weight))?;
+        terminal.write_fmt(format_args!(
+            "\nWEIGHT: {:<8.2}\n",
+            Self::clamp_inf(cx.state.weight, 9999.0)
+        ))?;
         terminal.write_fmt(format_args!(
             "\n  TIME:{}\n",
             Self::format_duration(
@@ -67,6 +73,18 @@ impl Dashboard {
                     .map_or_else(|| Duration::from_ticks(0), |w| w.read())
             ),
         ))
+    }
+
+    fn clamp_inf(x: f32, abs_max: f32) -> f32 {
+        if fabsf(x) > abs_max {
+            if x >= 0.0 {
+                f32::INFINITY
+            } else {
+                f32::NEG_INFINITY
+            }
+        } else {
+            x
+        }
     }
 
     fn format_duration(d: Duration) -> String {

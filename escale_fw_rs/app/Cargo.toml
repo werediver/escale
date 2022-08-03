@@ -15,6 +15,7 @@ alloc-cortex-m = "0.4.2"
 panic-probe = "0.3.0"
 # rtt-target = { version = "0.3.1", features = ["cortex-m"] }
 fugit = "0.3.6"
+libm = "0.2.3"
 
 # Board Support Package
 rp-pico = "0.4.1"

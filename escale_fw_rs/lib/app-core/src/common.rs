@@ -1,5 +1,7 @@
 use stuff::mq::MessageQueue;
 
+use crate::button::ButtonEvent;
+
 pub type Instant = fugit::Instant<u64, 1, 1_000_000>;
 pub type Duration = fugit::Duration<u64, 1, 1_000_000>;
 
@@ -16,8 +18,8 @@ pub enum AppMessage {
 }
 
 pub enum InputEvent {
-    ButtonADown,
-    ButtonBDown,
+    ButtonA(ButtonEvent),
+    ButtonB(ButtonEvent),
 }
 
 #[derive(Default)]

@@ -141,6 +141,7 @@ fn _main() -> ! {
     schedule.push(AppTask::InputScanner(InputScanner::new(
         move || button_a_pin.is_low().ok().unwrap(),
         move || button_b_pin.is_low().ok().unwrap(),
+        || Uptime::get_instant(),
     )));
 
     let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
@@ -173,12 +174,12 @@ fn _main() -> ! {
     }
 }
 
-enum AppTask {
-    InputScanner(InputScanner),
+enum AppTask<'a> {
+    InputScanner(InputScanner<'a>),
     Dashboard(Dashboard),
 }
 
-impl<'a> AsMut<dyn Task<AppContext> + 'a> for AppTask {
+impl<'a> AsMut<dyn Task<AppContext> + 'a> for AppTask<'a> {
     fn as_mut(&mut self) -> &mut (dyn Task<AppContext> + 'a) {
         match self {
             AppTask::InputScanner(input_scanner) => input_scanner,
