@@ -2,7 +2,7 @@ use alloc::{format, rc::Rc, string::String};
 use core::cell::RefCell;
 use libm::fabsf;
 
-use app_core::{
+use crate::{
     button::ButtonEvent,
     common::{AppContext, AppMessage, Duration, InputEvent, Instant},
     terminal::Terminal,

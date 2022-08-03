@@ -1,7 +1,7 @@
 use stuff::run_loop::{Task, TaskStatus};
 
 use crate::{
-    button::{Button, ButtonEvent},
+    button::Button,
     common::{AppContext, AppMessage, InputEvent, Instant},
 };
 

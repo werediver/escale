@@ -7,6 +7,7 @@ extern crate alloc;
 
 pub mod button;
 pub mod common;
+pub mod dashboard;
 pub mod input_scanner;
 pub mod scale;
 pub mod terminal;

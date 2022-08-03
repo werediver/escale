@@ -3,7 +3,6 @@
 #![feature(alloc_error_handler)]
 #![feature(trait_alias)]
 
-mod dashboard;
 mod ssd1306_terminal;
 mod uptime;
 mod uptime_delay;
@@ -36,11 +35,11 @@ use ssd1306::{
 
 use app_core::{
     common::{AppContext, AppMessage},
+    dashboard::Dashboard,
     input_scanner::InputScanner,
     scale::Scale,
     terminal::Terminal,
 };
-use dashboard::Dashboard;
 use ssd1306_terminal::Ssd1306Terminal;
 use stuff::{
     mq::MessageProcessingStatus,
@@ -139,8 +138,8 @@ fn _main() -> ! {
     let button_b_pin: Pin<_, PullUpInput> = pins.gpio26.into_mode();
 
     schedule.push(AppTask::InputScanner(InputScanner::new(
-        move || button_a_pin.is_low().ok().unwrap(),
-        move || button_b_pin.is_low().ok().unwrap(),
+        move || button_a_pin.is_low().unwrap(),
+        move || button_b_pin.is_low().unwrap(),
         || Uptime::get_instant(),
     )));
 
