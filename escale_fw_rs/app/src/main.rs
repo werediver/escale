@@ -170,6 +170,8 @@ fn _main() -> ! {
         TaskStatus::Pending
     })));
 
+    cx.mq.push(AppMessage::Tare);
+
     loop {
         schedule.run(&mut cx);
     }
