@@ -34,7 +34,7 @@ use ssd1306::{
 };
 
 use app_core::{
-    common::{AppContext, AppMessage},
+    common::{AppContext, AppMessage, AppTask},
     dashboard::Dashboard,
     input_scanner::InputScanner,
     scale::Scale,
@@ -43,7 +43,7 @@ use app_core::{
 use ssd1306_terminal::Ssd1306Terminal;
 use stuff::{
     mq::MessageProcessingStatus,
-    run_loop::{Schedule, Task},
+    run_loop::{FnTask, Schedule, Task, TaskStatus},
 };
 use uptime::Uptime;
 
@@ -95,7 +95,7 @@ fn _main() -> ! {
     .ok()
     .unwrap();
 
-    let i2c = I2C::i2c0(
+    let i2c0 = I2C::i2c0(
         pac.I2C0,
         pins.gpio16.into_mode(),
         pins.gpio17.into_mode(),
@@ -104,7 +104,19 @@ fn _main() -> ! {
         clocks.system_clock.freq(),
     );
 
-    let interface = I2CDisplayInterface::new(i2c);
+    let mut cx = AppContext::default();
+    let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
+
+    let button_a_pin: Pin<_, PullUpInput> = pins.gpio20.into_mode();
+    let button_b_pin: Pin<_, PullUpInput> = pins.gpio26.into_mode();
+
+    schedule.push(AppTask::InputScanner(InputScanner::new(
+        move || button_a_pin.is_low().unwrap(),
+        move || button_b_pin.is_low().unwrap(),
+        || Uptime::get_instant(),
+    )));
+
+    let interface = I2CDisplayInterface::new(i2c0);
     let mut ssd1306 =
         Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0).into_terminal_mode();
     ssd1306.init().unwrap();
@@ -113,6 +125,10 @@ fn _main() -> ! {
         let mut terminal = shared_terminal.borrow_mut();
         terminal.clear().unwrap();
     }
+    schedule.push(AppTask::Dashboard(Dashboard::new(
+        shared_terminal.clone(),
+        Uptime::get_instant,
+    )));
 
     let i2c1 = I2C::i2c1(
         pac.I2C1,
@@ -130,28 +146,9 @@ fn _main() -> ! {
         &mut uptime,
     )
     .unwrap();
-
-    let mut cx = AppContext::default();
-    let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
-
-    let button_a_pin: Pin<_, PullUpInput> = pins.gpio20.into_mode();
-    let button_b_pin: Pin<_, PullUpInput> = pins.gpio26.into_mode();
-
-    schedule.push(AppTask::InputScanner(InputScanner::new(
-        move || button_a_pin.is_low().unwrap(),
-        move || button_b_pin.is_low().unwrap(),
-        || Uptime::get_instant(),
-    )));
-
-    let dashboard = Dashboard::new(shared_terminal.clone(), Uptime::get_instant);
-    schedule.push(AppTask::Dashboard(dashboard));
-
     let mut scale = Scale::<i32, f32, 20>::default();
 
-    loop {
-        schedule.run(&mut cx);
-
-        // This is a sketch. It should be a task in the future.
+    schedule.push(AppTask::Fn(FnTask::new(move |cx: &mut AppContext| {
         if nau7802.data_available().unwrap() {
             let raw = nau7802.read_unchecked().unwrap();
             scale.push(raw);
@@ -170,19 +167,10 @@ fn _main() -> ! {
                 cx.state.weight = scale.read().unwrap();
             }
         }
-    }
-}
+        TaskStatus::Pending
+    })));
 
-enum AppTask<'a> {
-    InputScanner(InputScanner<'a>),
-    Dashboard(Dashboard),
-}
-
-impl<'a> AsMut<dyn Task<AppContext> + 'a> for AppTask<'a> {
-    fn as_mut(&mut self) -> &mut (dyn Task<AppContext> + 'a) {
-        match self {
-            AppTask::InputScanner(input_scanner) => input_scanner,
-            AppTask::Dashboard(dashboard) => dashboard,
-        }
+    loop {
+        schedule.run(&mut cx);
     }
 }

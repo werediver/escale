@@ -1,4 +1,4 @@
-use alloc::vec::Vec;
+use alloc::{boxed::Box, vec::Vec};
 use core::marker::PhantomData;
 
 pub trait Task<Context> {
@@ -8,6 +8,25 @@ pub trait Task<Context> {
 pub enum TaskStatus {
     Pending,
     Done,
+}
+
+pub struct FnTask<'a, Context> {
+    f: Box<dyn FnMut(&mut Context) -> TaskStatus + 'a>,
+}
+
+impl<'a, Context> FnTask<'a, Context> {
+    pub fn new<F>(f: F) -> FnTask<'a, Context>
+    where
+        F: FnMut(&mut Context) -> TaskStatus + 'a,
+    {
+        Self { f: Box::new(f) }
+    }
+}
+
+impl<'a, Context> Task<Context> for FnTask<'a, Context> {
+    fn run(&mut self, cx: &mut Context) -> TaskStatus {
+        (self.f)(cx)
+    }
 }
 
 pub struct Schedule<T, Context>
