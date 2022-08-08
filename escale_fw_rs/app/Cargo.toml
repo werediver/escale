@@ -24,6 +24,7 @@ rp-pico = "0.4.1"
 # rp2040-hal = { version="0.4.0", features=["rt"] }
 # rp2040-boot2 = "0.2.0"
 
+rp2040-flash = "0.1.0"
 ssd1306 = "0.7.0"
 nau7802 = { git = "https://github.com/werediver/nau7802-rs.git", branch = "next" }
 

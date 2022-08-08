@@ -2,7 +2,10 @@
 #![no_main]
 #![feature(alloc_error_handler)]
 #![feature(trait_alias)]
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
 
+mod flash;
 mod ssd1306_terminal;
 mod uptime;
 mod uptime_delay;
@@ -15,6 +18,7 @@ use core::{alloc::Layout, cell::RefCell};
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
+use flash::FlashSector;
 use panic_probe as _;
 
 use rp_pico as bsp;
@@ -54,6 +58,31 @@ fn oom(_: Layout) -> ! {
 
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+struct Conf {
+    format: u16,
+    scale_unit: f32,
+}
+
+impl Conf {
+    const fn initial() -> Self {
+        Self {
+            format: 1,
+            scale_unit: 1.0,
+        }
+    }
+}
+
+#[link_section = ".rodata"]
+static mut CONF_FLASH_SECTOR: FlashSector<Conf> = FlashSector::uninit();
+
+unsafe fn write_conf(conf: Conf) {
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+    CONF_FLASH_SECTOR.write(conf);
+    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+}
 
 fn init_heap() {
     use core::mem::MaybeUninit;
@@ -130,6 +159,17 @@ fn _main() -> ! {
         Uptime::get_instant,
     )));
 
+    let conf = {
+        let conf = unsafe { CONF_FLASH_SECTOR.read().assume_init() };
+
+        let init_conf = Conf::initial();
+        if conf.format == init_conf.format {
+            conf
+        } else {
+            init_conf
+        }
+    };
+
     let i2c1 = I2C::i2c1(
         pac.I2C1,
         pins.gpio2.into_mode(),
@@ -147,6 +187,7 @@ fn _main() -> ! {
     )
     .unwrap();
     let mut scale = Scale::<i32, f32, 20>::default();
+    scale.set_unit(conf.scale_unit);
 
     schedule.push(AppTask::Fn(FnTask::new(move |cx: &mut AppContext| {
         if nau7802.data_available().unwrap() {
@@ -155,11 +196,14 @@ fn _main() -> ! {
             if scale.is_filled() {
                 cx.mq.process(|m, _push| match m {
                     AppMessage::Tare => {
-                        scale.set_tare().unwrap();
+                        scale.capture_tare().unwrap();
                         MessageProcessingStatus::Processed
                     }
                     AppMessage::Calibrate => {
-                        scale.set_unit(100.0).unwrap();
+                        scale.capture_unit(100.0).unwrap();
+                        let mut conf = Conf::initial();
+                        conf.scale_unit = scale.get_unit();
+                        unsafe { write_conf(conf) }
                         MessageProcessingStatus::Processed
                     }
                     _ => MessageProcessingStatus::Ignored,

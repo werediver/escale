@@ -9,6 +9,8 @@
         "libm",
         "pico",
         "plls",
+        "repr",
+        "rodata",
         "Uninit",
         "XOSC",
         "xtal"

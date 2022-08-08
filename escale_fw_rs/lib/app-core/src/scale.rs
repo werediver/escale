@@ -43,7 +43,7 @@ where
     /// Set the zero offset (tare) based on the current buffer.
     ///
     /// The buffer must be filled.
-    pub fn set_tare(&mut self) -> Result<(), Error> {
+    pub fn capture_tare(&mut self) -> Result<(), Error> {
         if self.is_filled() {
             self.tare = self.read_raw()?;
             Ok(())
@@ -58,7 +58,7 @@ where
     ///
     /// If the desired unit is 1 g and a 100 g weight is used for calibration,
     /// set `value` to 100.
-    pub fn set_unit(&mut self, value: U) -> Result<(), Error> {
+    pub fn capture_unit(&mut self, value: U) -> Result<(), Error> {
         assert!(value != U::zero());
         if self.is_filled() {
             let unit = (self.read_raw()? - self.tare) / value;
@@ -68,6 +68,15 @@ where
         } else {
             Err(Error::NotFilled)
         }
+    }
+
+    pub fn set_unit(&mut self, unit: U) {
+        assert!(unit != U::zero());
+        self.unit = unit;
+    }
+
+    pub fn get_unit(&self) -> U {
+        self.unit
     }
 
     fn read_raw(&self) -> Result<U, Error> {
