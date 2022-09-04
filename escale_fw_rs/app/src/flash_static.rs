@@ -63,11 +63,11 @@ where
     }
 }
 
-const fn is_pwr_of_two(n: usize) -> bool {
-    n != 0 && (n & (n - 1) == 0)
-}
-
 const fn is_aligned(addr: usize, alignment: usize) -> bool {
     assert!(is_pwr_of_two(alignment));
     addr & (alignment - 1) == 0
+}
+
+const fn is_pwr_of_two(n: usize) -> bool {
+    n != 0 && (n & (n - 1) == 0)
 }

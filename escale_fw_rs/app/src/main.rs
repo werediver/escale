@@ -5,7 +5,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-mod flash;
+mod flash_static;
 mod ssd1306_terminal;
 mod uptime;
 mod uptime_delay;
@@ -18,7 +18,7 @@ use core::{alloc::Layout, cell::RefCell};
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
-use flash::FlashSector;
+use flash_static::FlashSector;
 use panic_probe as _;
 
 use rp_pico as bsp;
