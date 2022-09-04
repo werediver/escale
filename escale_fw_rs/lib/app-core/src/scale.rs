@@ -1,12 +1,12 @@
 use num_traits::{float::FloatCore, PrimInt};
-use stuff::{ring::Ring, signal::mean};
+use stuff::{simple_ring::SimpleRing, signal::mean};
 
 pub struct Scale<T: PrimInt, U: FloatCore, const N: usize>
 where
     // Require N ≥ 1
     [(); N - 1]:,
 {
-    ring: Ring<T, N>,
+    ring: SimpleRing<T, N>,
     tare: U,
     unit: U,
 }

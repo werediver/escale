@@ -2,7 +2,8 @@
 members = [
   "app",
   "lib/app-core",
-  "lib/stuff"
+  "lib/stuff",
+  "lib/ring"
 ]
 
 # cargo build/run
