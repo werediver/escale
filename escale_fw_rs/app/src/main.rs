@@ -5,6 +5,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
+mod flash;
 mod flash_static;
 mod ssd1306_terminal;
 mod uptime;
@@ -14,11 +15,12 @@ extern crate alloc;
 
 use alloc::rc::Rc;
 use alloc_cortex_m::CortexMHeap;
+use core::mem::size_of;
 use core::{alloc::Layout, cell::RefCell};
 use cortex_m_rt::entry;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
-use flash_static::FlashSector;
+use flash::{Flash, FLASH_ORIGIN};
 use panic_probe as _;
 
 use rp_pico as bsp;
@@ -59,6 +61,11 @@ fn oom(_: Layout) -> ! {
 #[global_allocator]
 static ALLOCATOR: CortexMHeap = CortexMHeap::empty();
 
+#[allow(non_upper_case_globals)]
+const MiB: usize = 1024 * 1024;
+const FLASH_END: usize = FLASH_ORIGIN + 2 * MiB;
+const FLASH_CONF_ADDR: usize = FLASH_END - size_of::<Flash<Conf>>();
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 struct Conf {
@@ -66,8 +73,8 @@ struct Conf {
     scale_unit: f32,
 }
 
-impl Conf {
-    const fn initial() -> Self {
+impl Default for Conf {
+    fn default() -> Self {
         Self {
             format: 1,
             scale_unit: 1.0,
@@ -75,13 +82,10 @@ impl Conf {
     }
 }
 
-#[link_section = ".rodata"]
-static mut CONF_FLASH_SECTOR: FlashSector<Conf> = FlashSector::uninit();
-
-unsafe fn write_conf(conf: Conf) {
-    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
-    CONF_FLASH_SECTOR.write(conf);
-    core::sync::atomic::compiler_fence(core::sync::atomic::Ordering::SeqCst);
+impl Conf {
+    fn is_valid(&self) -> bool {
+        self.format != 0 && !self.format != 0
+    }
 }
 
 fn init_heap() {
@@ -160,13 +164,12 @@ fn _main() -> ! {
     )));
 
     let conf = {
-        let conf = unsafe { CONF_FLASH_SECTOR.read().assume_init() };
+        let conf: Conf = unsafe { Flash::read(FLASH_CONF_ADDR).value().assume_init() };
 
-        let init_conf = Conf::initial();
-        if conf.format == init_conf.format {
+        if conf.is_valid() {
             conf
         } else {
-            init_conf
+            Default::default()
         }
     };
 
@@ -201,9 +204,13 @@ fn _main() -> ! {
                     }
                     AppMessage::Calibrate => {
                         scale.capture_unit(100.0).unwrap();
-                        let mut conf = Conf::initial();
-                        conf.scale_unit = scale.get_unit();
-                        unsafe { write_conf(conf) }
+                        let conf = Conf {
+                            scale_unit: scale.get_unit(),
+                            ..Default::default()
+                        };
+                        cortex_m::interrupt::free(|_cs| unsafe {
+                            Flash::new(conf).write(FLASH_CONF_ADDR)
+                        });
                         MessageProcessingStatus::Processed
                     }
                     _ => MessageProcessingStatus::Ignored,
