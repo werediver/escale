@@ -9,7 +9,7 @@ pub struct Button<'a> {
     get_instant: Box<dyn Fn() -> Instant + 'a>,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Eq, Debug)]
 pub enum ButtonEvent {
     Press,
     LongPress,
@@ -33,7 +33,7 @@ impl<'a> Button<'a> {
 
     pub fn refresh<F>(&mut self, on_event: F)
     where
-        F: FnOnce(ButtonEvent) -> (),
+        F: FnOnce(ButtonEvent),
     {
         let now = (self.get_instant)();
         let press_duration = self.down_since.map(|down_since| now - down_since);

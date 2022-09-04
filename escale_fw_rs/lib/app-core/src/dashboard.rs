@@ -30,7 +30,7 @@ impl Dashboard {
     fn handle_input(
         &mut self,
         e: &AppMessage,
-        push: &mut dyn FnMut(AppMessage) -> (),
+        push: &mut dyn FnMut(AppMessage),
     ) -> MessageProcessingStatus {
         if let AppMessage::InputEvent(e) = e {
             match e {
@@ -116,7 +116,7 @@ impl Stopwatch {
         Self {
             start: get_instant(),
             end: None,
-            get_instant: get_instant,
+            get_instant,
         }
     }
 

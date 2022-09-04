@@ -22,7 +22,7 @@ impl<M> MessageQueue<M> {
 
     pub fn process<F>(&mut self, mut f: F)
     where
-        F: FnMut(&M, &mut dyn FnMut(M) -> ()) -> MessageProcessingStatus,
+        F: FnMut(&M, &mut dyn FnMut(M)) -> MessageProcessingStatus,
     {
         let mut new = Vec::<M>::default();
         self.msgs

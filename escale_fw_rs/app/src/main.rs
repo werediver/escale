@@ -6,7 +6,6 @@
 #![feature(generic_const_exprs)]
 
 mod flash;
-mod flash_static;
 mod ssd1306_terminal;
 mod uptime;
 mod uptime_delay;
@@ -17,7 +16,6 @@ use alloc::rc::Rc;
 use alloc_cortex_m::CortexMHeap;
 use core::mem::size_of;
 use core::{alloc::Layout, cell::RefCell};
-use cortex_m_rt::entry;
 use embedded_hal::digital::v2::InputPin;
 use embedded_time::rate::Extensions;
 use flash::{Flash, FLASH_ORIGIN};
@@ -25,6 +23,7 @@ use panic_probe as _;
 
 use rp_pico as bsp;
 
+use bsp::hal;
 use bsp::hal::{
     clocks::init_clocks_and_plls,
     gpio::{Pin, PullUpInput},
@@ -95,7 +94,7 @@ fn init_heap() {
     unsafe { ALLOCATOR.init(HEAP.as_ptr() as usize, HEAP_SIZE) }
 }
 
-#[entry]
+#[hal::entry]
 fn _main() -> ! {
     init_heap();
 
@@ -146,7 +145,7 @@ fn _main() -> ! {
     schedule.push(AppTask::InputScanner(InputScanner::new(
         move || button_a_pin.is_low().unwrap(),
         move || button_b_pin.is_low().unwrap(),
-        || Uptime::get_instant(),
+        Uptime::get_instant,
     )));
 
     let interface = I2CDisplayInterface::new(i2c0);
@@ -159,7 +158,7 @@ fn _main() -> ! {
         terminal.clear().unwrap();
     }
     schedule.push(AppTask::Dashboard(Dashboard::new(
-        shared_terminal.clone(),
+        shared_terminal,
         Uptime::get_instant,
     )));
 

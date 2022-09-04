@@ -96,7 +96,7 @@ where
     }
 
     fn adjust(&self, raw: T) -> U {
-        const E_RAW_MUST_FIT: &str = &"Raw readout must fit into the output floating point type";
+        const E_RAW_MUST_FIT: &str = "Raw readout must fit into the output floating point type";
         (U::from(raw).expect(E_RAW_MUST_FIT) - self.tare) / self.unit
     }
 }
