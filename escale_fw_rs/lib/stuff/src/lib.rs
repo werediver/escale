@@ -5,7 +5,6 @@
 extern crate alloc;
 
 pub mod mq;
-pub mod ring;
-mod ring_state;
 pub mod run_loop;
 pub mod signal;
+pub mod simple_ring;

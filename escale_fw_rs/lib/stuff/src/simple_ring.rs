@@ -1,7 +1,7 @@
 use core::iter::Chain;
 
 #[derive(Debug)]
-pub struct Ring<T, const N: usize>
+pub struct SimpleRing<T, const N: usize>
 where
     // Require N ≥ 1
     [(); N - 1]:,
@@ -11,7 +11,7 @@ where
     is_filled: bool,
 }
 
-impl<T: Copy + Default, const N: usize> Default for Ring<T, N>
+impl<T: Copy + Default, const N: usize> Default for SimpleRing<T, N>
 where
     [(); N - 1]:,
 {
@@ -24,7 +24,7 @@ where
     }
 }
 
-impl<T, const N: usize> Ring<T, N>
+impl<T, const N: usize> SimpleRing<T, N>
 where
     [(); N - 1]:,
 {
@@ -70,7 +70,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> IntoIterator for &'a Ring<T, N>
+impl<'a, T, const N: usize> IntoIterator for &'a SimpleRing<T, N>
 where
     [(); N - 1]:,
 {
@@ -82,7 +82,7 @@ where
     }
 }
 
-impl<'a, T, const N: usize> IntoIterator for &'a mut Ring<T, N>
+impl<'a, T, const N: usize> IntoIterator for &'a mut SimpleRing<T, N>
 where
     [(); N - 1]:,
 {
@@ -101,18 +101,18 @@ mod tests {
 
     #[test]
     fn default_works() {
-        let ring = Ring::<i32, 3>::default();
+        let ring = SimpleRing::<i32, 3>::default();
         assert_eq!(ring.data, [0; 3]);
     }
 
     #[test]
     fn new_ring_is_not_filled() {
-        assert_eq!(Ring::<i32, 3>::default().is_filled(), false);
+        assert_eq!(SimpleRing::<i32, 3>::default().is_filled(), false);
     }
 
     #[test]
     fn underfilled_ring_is_not_filled() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(1);
         ring.push(2);
         assert_eq!(ring.is_filled(), false);
@@ -120,7 +120,7 @@ mod tests {
 
     #[test]
     fn filled_ring_is_filled() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(1);
         ring.push(2);
         ring.push(3);
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn overfilled_ring_is_filled() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(1);
         ring.push(2);
         ring.push(3);
@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn iter_works() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -149,7 +149,7 @@ mod tests {
 
     #[test]
     fn iter_mut_works() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn into_iter_works() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -176,7 +176,7 @@ mod tests {
 
     #[test]
     fn into_iter_mut_works() {
-        let mut ring = Ring::<i32, 3>::default();
+        let mut ring = SimpleRing::<i32, 3>::default();
         ring.push(4);
         ring.push(5);
         ring.push(6);
@@ -184,7 +184,6 @@ mod tests {
         for x in &mut ring {
             *x += 1;
         }
-        dbg!(&ring);
         assert!(ring.iter_mut().eq([6, 7, 8].iter()));
     }
 }
