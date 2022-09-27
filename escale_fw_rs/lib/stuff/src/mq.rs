@@ -1,7 +1,8 @@
 use alloc::vec::Vec;
+use ring::{ring::Ring, ring_state::Overwriting};
 
-pub struct MessageQueue<M> {
-    msgs: Vec<M>,
+pub struct MessageQueue<M, const N: usize> {
+    msgs: Ring<M, N, Overwriting>,
 }
 
 pub enum MessageProcessingStatus {
@@ -9,15 +10,17 @@ pub enum MessageProcessingStatus {
     Processed,
 }
 
-impl<M> Default for MessageQueue<M> {
+impl<M, const N: usize> Default for MessageQueue<M, N> {
     fn default() -> Self {
-        MessageQueue { msgs: Vec::new() }
+        MessageQueue {
+            msgs: Default::default(),
+        }
     }
 }
 
-impl<M> MessageQueue<M> {
+impl<M, const N: usize> MessageQueue<M, N> {
     pub fn push(&mut self, msg: M) {
-        self.msgs.push(msg);
+        _ = self.msgs.push(msg);
     }
 
     pub fn process<F>(&mut self, mut f: F)
@@ -30,7 +33,7 @@ impl<M> MessageQueue<M> {
                 MessageProcessingStatus::Ignored => true,
                 MessageProcessingStatus::Processed => false,
             });
-        self.msgs.append(&mut new);
+        self.msgs.append(new);
     }
 }
 

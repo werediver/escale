@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ring = { path = "../ring" }
 num-traits = { version = "0.2.15", default-features = false }
