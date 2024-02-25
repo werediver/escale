@@ -17,20 +17,14 @@ use alloc_cortex_m::CortexMHeap;
 use core::mem::size_of;
 use core::{alloc::Layout, cell::RefCell};
 use embedded_hal::digital::v2::InputPin;
-use embedded_time::rate::Extensions;
 use flash::{Flash, FLASH_ORIGIN};
+use fugit::RateExtU32;
 use panic_probe as _;
 
 use rp_pico as bsp;
 
 use bsp::hal;
-use bsp::hal::{
-    clocks::init_clocks_and_plls,
-    gpio::{Pin, PullUpInput},
-    pac,
-    sio::Sio,
-    Clock, Watchdog, I2C,
-};
+use bsp::hal::{clocks::init_clocks_and_plls, pac, sio::Sio, Clock, Watchdog, I2C};
 
 use nau7802::{Gain, Ldo, Nau7802, SamplesPerSecond};
 use ssd1306::{
@@ -54,7 +48,9 @@ use uptime::Uptime;
 
 #[alloc_error_handler]
 fn oom(_: Layout) -> ! {
-    loop {}
+    loop {
+        cortex_m::asm::wfi();
+    }
 }
 
 #[global_allocator]
@@ -129,8 +125,8 @@ fn _main() -> ! {
 
     let i2c0 = I2C::i2c0(
         pac.I2C0,
-        pins.gpio16.into_mode(),
-        pins.gpio17.into_mode(),
+        pins.gpio16.into_function(),
+        pins.gpio17.into_function(),
         400.kHz(),
         &mut pac.RESETS,
         clocks.system_clock.freq(),
@@ -139,8 +135,8 @@ fn _main() -> ! {
     let mut cx = AppContext::default();
     let mut schedule: Schedule<AppTask, AppContext> = Schedule::default();
 
-    let button_a_pin: Pin<_, PullUpInput> = pins.gpio20.into_mode();
-    let button_b_pin: Pin<_, PullUpInput> = pins.gpio26.into_mode();
+    let button_a_pin = pins.gpio20.into_pull_up_input();
+    let button_b_pin = pins.gpio26.into_pull_up_input();
 
     schedule.push(AppTask::InputScanner(InputScanner::new(
         move || button_a_pin.is_low().unwrap(),
@@ -174,8 +170,8 @@ fn _main() -> ! {
 
     let i2c1 = I2C::i2c1(
         pac.I2C1,
-        pins.gpio2.into_mode(),
-        pins.gpio3.into_mode(),
+        pins.gpio2.into_function(),
+        pins.gpio3.into_function(),
         400.kHz(),
         &mut pac.RESETS,
         clocks.system_clock.freq(),
